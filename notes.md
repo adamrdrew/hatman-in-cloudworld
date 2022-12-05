@@ -157,4 +157,40 @@ There are 240 scanlines where the PPU is drawing, and then 21 scanlines worth of
 #### PPU Registers
 [This page](https://www.nesdev.org/wiki/PPU_registers) on the NES Dev wiki provides a fantastic overview that I'm largely going to copy.
 
+For drawing the two most important registers are $2006 and $2007. $2006 is the address of the PPU memory map that you want to mutate. $2007 is where you put the data you want set in the address you put in $2006.
+
+So, say you want to write #2A to PPU memory location $3F00 (set background to linme green) you'd do this:
+```
+PPU_MASK = $2001
+PPU_ADDR = $2006
+PPU_DATA = $2007
+
+ldx #$3F
+stx PPU_ADDR
+
+ldx #$00
+stx PPU_ADDR
+
+ldx #$2A
+sta PPU_DATA 
+
+lda #&00011110
+sta PPU_MASK
+```
+
 #### PPU Memory Map
+-------------------------------------------------------------------
+|   Pattern Tables (CHR ROM)
+|       $0000-$0FFF - Pattern Table 0
+|       $1000-$1FFF - Pattern Table 1
+-------------------------------------------------------------------
+|   Name Tables (VRAM)
+|       $2000-$23FF - Name Table 0 & attributes
+|       $2400-$27FF - Name Table 1 & attributes
+|       $2800-$2BFF - Junk (Name Table 0 mirror)
+|       $2C00-$2FFF - Junk (Name Table 1 mirror)
+-------------------------------------------------------------------
+|   Unused (Mirrors) $3000-3EFF
+-------------------------------------------------------------------
+|   Palettes #3F00-$3FFF
+-------------------------------------------------------------------

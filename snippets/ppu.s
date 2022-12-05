@@ -18,6 +18,10 @@
 .segment "CODE"
     ;Code of PRG ROM
 
+    PPU_MASK = $2001
+    PPU_ADDR = $2006
+    PPU_DATA = $2007
+
     ;Reset code. This clears memory and registers.
     RESET:
         sei ;Disables all IRQs
@@ -45,6 +49,14 @@
 
 
     MainLoop:
+        ldx #$3F
+        stx PPU_ADDR
+        ldx #$00
+        stx PPU_ADDR
+        ldx #$2A
+        stx PPU_DATA
+        lda #%00011110
+        sta PPU_MASK
         jmp MainLoop
 
     NMI:
