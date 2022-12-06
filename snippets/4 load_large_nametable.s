@@ -3,19 +3,21 @@
 .include "../includes/constants.inc"
 .include "../includes/header.inc"
 .include "../includes/init.inc"
+.include "../includes/utils.inc"
 
-; $0800
+.segment "ZEROPAGE"
+Frame:   .res 1         ; Reserve 1 byte to store the framecounter
+Seconds: .res 1         ; Reserve 1 butes to store the second counter, increments every 60 frames
+BackgroundPtr: .res 2   ; Reserve 2 bytes for a pointer to a background array
+BGDrawPointer: .res 2   ; Reserve 2 bytes for the pointer we use to iterate through while drawing
+
 .segment "CODE"
 
     ; This is a subroutine and it is doooooope
     ; Subroutines are scoped - meaning labels defined in subroutines
     ; are local to that subroutine
     .proc LoadPalettes
-        bit PPU_STATUS   ; Resets the PPU_ADDRESS latch register
-        ldx #$3F
-        stx PPU_ADDR    ; Set the MSB of the PPU address we'll update to $3F
-        ldx #$00
-        stx PPU_ADDR    ; Set the LSB of the PPU address we'll update to $00 
+        PPU_SETADDR $3F00
         ; This is a for loop
         ; We are looping through PaletteData and reading those
         ; bytes into the PPU_DATA register
@@ -38,26 +40,38 @@
     .endproc
 
     .proc LoadNametable
-        bit PPU_STATUS
-        ldx #$20
-        stx PPU_ADDR    ; Set the MSB of the PPU address we'll update to $3F
-        ldx #$00
-        stx PPU_ADDR    ; Set the LSB of the PPU address we'll update to $00 
-
-        ldy #0
-        ReadNametableBytes:
-            ldx BackgroundData, y
-            stx PPU_DATA
-            iny 
-            cpy #255
-            bne ReadNametableBytes
+        PPU_SETADDR $2000
         
+        ; Copy the BackgroundPtr so we don't stomp over it while we're iterating
+        CopyPointer BackgroundPtr, BGDrawPointer
+
+        ldy #0  ; y stores the lower bit offset into the bg data arry
+        ldx #0  ; x stores the higher bit offset into the bg data array
+        GetChunk:  ; We can only load 255 at a time, so we break it into 4 255 char chunks 
+            ReadBytesInChunk:
+                lda (BGDrawPointer), y ; Read value from address BGDrawPointer + y
+                sta PPU_DATA
+                iny 
+                cpy #255 ; Keep iterating until we've read all 55 bytes in the chunk
+                bne ReadBytesInChunk
+            inc BGDrawPointer+1 ;Increate the hi-byte in the pointer address by one, which will increase our offset by 255
+            inx ; increase x
+            cpx #4 ; iterate for 4 chunks (4 chunks of 255b = 1kb)
+            bne GetChunk
         rts 
     .endproc
 
     ; Code of PRG ROM
     Reset:
         INIT_NES
+        lda #0
+        sta Frame
+        sta Seconds
+        sta BackgroundPtr
+        sta BackgroundData
+        ; Set background pointer
+        SetPointer BackgroundPtr, BackgroundData
+
 
     PaintBackround:
         jsr LoadPalettes
@@ -66,6 +80,11 @@
         ;Enable PPU Rendering
         lda #%10010000  ; Enable NMI interrupts from PPU. Set BG to use 2nd pattern table
         sta PPU_CTRL
+        ; Disable PPU Scrolling. This is customary to do when drawing to prevent errant scrolling
+        ; PPU_SCROLL is also a latch address, so we need to set it twice
+        lda #0
+        sta PPU_SCROLL ; X Scrolling
+        sta PPU_SCROLL ; Y Scrolling
         lda #%00011110
         sta PPU_MASK    ; Setting the mask ensures we show the background
 
@@ -73,6 +92,14 @@
         jmp MainLoop
 
     NMI:
+        inc Frame
+        lda Frame
+        cmp #60
+        bne :+
+        inc Seconds
+        lda #0
+        sta Frame
+        :
         rti ; Return from Interrupt
     IRQ:
         rti ; Return from Interrupt
@@ -88,28 +115,17 @@
     ; And because we know the array's origin address (PaletteData) and its length (32)
     ; we can iterate through it :)
     PaletteData:
-        .byte $30,$00,$16,$30, $0F,$00,$16,$30, $0F,$00,$16,$30, $0F,$00,$16,$30 ; Background
-        .byte $0F,$00,$16,$30, $0F,$2A,$0C,$3A, $0F,$2A,$0C,$3A, $0F,$2A,$0C,$3A ; Sprites
+        .byte $0D,$00,$16,$20, $0D,$17,$1A,$2A, $0D,$1C,$3C,$20, $0D,$2D,$01,$21 ; Background
+        .byte $0D,$00,$16,$20, $0D,$17,$1A,$2A, $0D,$1C,$3C,$20, $0D,$2D,$01,$21 ; Sprites
 
     ;This is tile data that must be copied to the nametable
     BackgroundData:
-        ;.incbin "resources/hello_hackathon.nam"
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$12,$0f,$16,$16,$19,$00,$12,$0b
-        .byte $0d,$15,$0b,$1e,$12,$19,$18,$26,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$27,$0b,$0e,$0e
-        .byte $1c,$0f,$21,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$e0,$e1
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$f0,$f1
-        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .incbin "resources/full_screen_nametable.nam"
+        
+
+    AttributeData:
+        .byte %00000000, %00000000, %10101010, %00000000, %11110000, %00000000, %00000000, %00000000
+        .byte %11111111, %11111111, %11111111, %11111111, %11111111, %11111111, %11111111, %11111111
 
 ;Load CHAR_ROM pattern tables
 .segment "CHARS"

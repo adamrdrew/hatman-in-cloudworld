@@ -72,6 +72,7 @@ Also, super important, if you add 1 to 127 with 2's Complement (01111111 + 00000
 
 ### Common 6502 Assembly Patterns
 
+#### For Loop
 A simple loop:
 
 ```asm
@@ -81,7 +82,42 @@ Loop:           ; Create a label
     BNE Loop    ; Brance if not equal to 0. If y != 0 GOTO Loop
 ```
 
-Looping through an array:
+#### If block
+For an if we can do a compare and branch if not equal, and then use that to skip logic with an anonymous lable.
+
+```
+.segment "ZEROPAGE"
+Frame: .res 1
+Seconds: .res 1
+
+.segment "CODE"
+    lda #0
+    sta Frame
+    sta Seconds
+
+    Loop:
+        jmp Loop
+
+NMI:
+    inc Frame
+    lda Frame       ; Variable we are going to compare
+    cmp #60         ; CONDITIONAL = "frame == 60?"
+    bne :SKIP_LOGIC ; if !CONDITONAL GOTO SKIP_LOGIC
+    inc Seconds
+    lda #0
+    :SKIP_LOGIC
+```
+As you can see, and as with a lot of things in assembly, it is cast in the negative. It is the opposite of what we expect with a standard if block, but it does the same thing. An if in asm is cast sort of like this
+
+```
+if Frame != 60 {
+} else {
+    Seconds++
+    Frame = 0
+}
+```
+
+#### Looping through an array:
 
 ```
 ; Define an array of bytes in ROM
@@ -100,6 +136,98 @@ ReadArray:
     cpy #8
     ; Loop if the iteration count is not equal to the array length
     bne ReadArray
+```
+
+#### Dynamic Macros
+Dynamic macros are macros that can accept a parameter. These are not funcitons - they have no scope and do not return anything. These are not subroutes, the program counter never changes. These are inserted by the assembler into your code at the place you call them. However, they are super handy because they can accept parameters:
+
+```
+.macro PPU_SETADDR addr
+        bit PPU_STATUS  ; Resets the PPU_ADDRESS latch register
+        ldx #>addr      ; Get the high byte of the addr
+        stx PPU_ADDR    ; Set the MSB of the PPU address
+        ldx #<addr      ; Get the low byte of the addr
+        stx PPU_ADDR    ; Set the LSB of the PPU address
+.endmacro
+```
+
+That macro accepts the `addr` param which it then splits into high and low bytes for writing to the PPU address latch register. Calling it is as simple as
+
+```
+PPU_SETADDR $2000
+```
+
+#### Variables
+We can declare named variables in the zero page for keeping track of data. This is incredibly awesome and handy and I did not expect assembly to allow this.
+
+```
+; Declare the variables by reserving their size in the zero page
+.segment "ZEROPAGE"
+Score: .res 1 ; Reserve one byte for score
+Frame: .res 1 ; Reserve one byte for frame counter
+```
+
+At the beginning of your program you should set their initial values:
+
+```
+lda #0
+sta Score
+```
+
+Any op code that can act on an address can act on the variable:
+
+```
+inc Score
+dec Score
+lda Score
+```
+
+#### Pointers
+Pointers allow you a level of abstraction by storing a reference in memory to the address of something else in memory. You can then manipulate that thing by using the pointer to look up the address. This is handy if you want to be able to use the same code to work with different structures at different places in memory. Say for example, code to copy background data into a nametable. You are going to have many background data tables, so being able to reference what table you want to read by address rather than by name is handy, because by changing the address value of the pointer you can change what table you read.
+
+Note: Pointer usage comes with some strict caveats that will cause your program not to compile. They are:
+1. Pointers are 16 bit values because they are memory addresses, meaning that they need to be populated in 2 ops: lo-byte and then hi-byte
+2. When Addressing an offset into a memory area by pointer you can only use the Y register for the offset. This is a hardware limitation.
+3. When reading from a pointer you can only read into the accumulator. This is a hardware limit. Basically, never use the X register when working with pointers.
+
+
+```
+.macro SetPointer pointer, address
+        lda #<address       ; Get the lo-byte of the background data address
+        sta pointer         ; Store the lo-byte at the BackgrounbPtr
+        lda #>address       ; Get the hi-byte at the BackgroundPtr
+        sta pointer+1       ; Store the hi-byte at BackgroundPtr +1 (cuz its the next bit) 
+.endmacro
+
+.segment "ZEROPAGE"
+    BackgroundPtr: .res 2   ; Reserve 2 bytes for the pointer
+
+.segment "CODE"
+
+    .proc IterateOverBackgroundData
+        ; You MUST use Y as the index for the iterator when using a pointer
+        ldy #0
+        ReadBackgroundDataBytes:
+            ; You MUST use A as your register when reading from a pointer
+            ; The pointer address syntax is just the parens around the pointer name
+            ; And notice again, we're using y as our index
+            lda (BackgroundPtr), y 
+            ; Do something with our data in A here, like send to PPU or whatever
+            iny
+            cpy #255
+            bne ReadBackgroundDataBytes
+        rts
+    .endproc
+
+    SetPointer BackgroundPtr, BackgroundData1
+    IterateOverBackgroundData
+    SetPointer BackgroundPtr, BackgroundData2
+    IterateOverBackgroundData
+
+    BackgroundData1:
+        .byte 23,34,23,34,45,56,67,67,67,67,67 ;...
+    BackgroundData2:
+        .byte 34,67,23,45,67,34,56,78,89,56,34 ;...
 ```
 
 ### Addressing Modes
@@ -219,3 +347,96 @@ sta PPU_MASK
 |   Palettes #3F00-$3FFF
 -------------------------------------------------------------------
 ```
+
+#### Drawing a Background
+Putting everything together we can now draw a background. The basics are:
+* Load a CHR ROM
+* Load background data (an array of tile IDs)
+* Load palettes 
+* Load the background data onto a nametable
+* Tell the PPU to render
+
+You load the CHR ROM in a segment and use a binary include:
+```
+;Load CHAR_ROM pattern tables
+.segment "CHARS"
+.incbin "resources/learning.chr"
+```
+
+The background data - what will be populated into your nametable - is just an array of tile IDs from the char rom
+
+```
+    BackgroundData:
+        ;.incbin "resources/hello_hackathon.nam"
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$12,$0f,$16,$16,$19,$00,$12,$0b
+        .byte $0d,$15,$0b,$1e,$12,$19,$18,$26,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$27,$0b,$0e,$0e
+        .byte $1c,$0f,$21,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$e0,$e1
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$f0,$f1
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+```
+
+Loading the nametable is as easy as pushing that BackgroundData onto the PPU at 0x2000
+
+```
+    .proc LoadNametable
+        bit PPU_STATUS
+        ldx #$20
+        stx PPU_ADDR    ; Set the MSB of the PPU address we'll update to $3F
+        ldx #$00
+        stx PPU_ADDR    ; Set the LSB of the PPU address we'll update to $00 
+
+        ldy #0
+        ReadNametableBytes:
+            ldx BackgroundData, y
+            stx PPU_DATA
+            iny 
+            cpy #255
+            bne ReadNametableBytes
+        
+        rts 
+    .endproc
+```
+
+And then force the PPU to render:
+
+```
+        ;Enable PPU Rendering
+        lda #%10010000  ; Enable NMI interrupts from PPU. Set BG to use 2nd pattern table
+        sta PPU_CTRL
+        lda #%00011110
+        sta PPU_MASK    ; Setting the mask ensures we show the background
+```
+
+That's the basics. 
+
+Note: The first tile on the top, left, right, and bottom edges isn't rendered correctly, it is in the overscan area.
+
+#### Resolution, Nametable Size, and Attributes
+Each screen displayed is 256x240 or 32 tiles x 30 tiles for 960 bytes total. In each nametable we have 1k of VRAM to use. That leaves 64 bytes left over. That is where we store attributes. Attrbites tell the PPU what patelletes to use. There isn't enough space for per-tile control, so it needs to be aggregated.
+
+Attributes represent 4x4 "attribute tiles." Basically, if the nametable is broken up into a grid of 32x30 tiles. The attributes are broken up into a grid of 8x8 tiles, with each entry in the attribute table representing 4 total tiles - so we can control the palettes on a 2x2 tile basis. This is called the Attribute Grid.
+
+Because we're dealing with so little space the Attribute Grid is stored bitwise. Here's an example:
+
+```
+AttributeData:
+    .byte %00000000, %00000000, %10101010, %00000000, %11110000, %00000000, %00000000, %00000000
+    .byte %11111111, %11111111, %11111111, %11111111, %11111111, %11111111, %11111111, %11111111
+````
+Each nibble (2 bits) represents the color palette for a group of 4 tiles. So the first byte represents the palette for 16 total tiles. Valid palette values are:
+
+* 00 - Palette 0 
+* 01 - Palette 1
+* 10 - Palette 2
+* 11 - Palette 3
