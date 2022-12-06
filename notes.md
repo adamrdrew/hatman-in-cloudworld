@@ -81,6 +81,27 @@ Loop:           ; Create a label
     BNE Loop    ; Brance if not equal to 0. If y != 0 GOTO Loop
 ```
 
+Looping through an array:
+
+```
+; Define an array of bytes in ROM
+MyArray:
+    .byte $32, $FF, $41, $56, $32, $3E, $AF, $FF
+
+; Set our iteration count to 0
+ldy #0
+; Give our starting point a label
+ReadArray: 
+    ; Get the value from the array at position iteration count
+    ldx MyArray, y
+    ; do something with x
+    iny
+    ; Compare our iteration count to the length of the array
+    cpy #8
+    ; Loop if the iteration count is not equal to the array length
+    bne ReadArray
+```
+
 ### Addressing Modes
 Consider these two accumulator load codes:
 
@@ -112,6 +133,7 @@ That stores the accumulator in the memory address $0080 + the value of X. So if 
 ### Memory Map
 The NES being a 6502 based computer is all about memory mapping. You don't have some rich SDK in software, rather you manipulate memory addresses that have specific functions. For example, the PPU, sound chip, and controllers are all accessed through memory. So how does address space break down?
 
+```
 -------------------------------------------------------------------
 | $0000 - $07FF RAM
 |     $0000 - $00FF is the zero page which is faster to access
@@ -135,6 +157,7 @@ The NES being a 6502 based computer is all about memory mapping. You don't have 
 |$8000 - $FFFF - Cartridge PRG-ROM
 |    $FFFA-$FFFF - Vectors
 -------------------------------------------------------------------
+```
 
 ### PPU
 * Has direct access to the CHR ROM in the cartridge. CHR ROM is a bitmap of all tiles in the game.
@@ -179,6 +202,7 @@ sta PPU_MASK
 ```
 
 #### PPU Memory Map
+```
 -------------------------------------------------------------------
 |   Pattern Tables (CHR ROM)
 |       $0000-$0FFF - Pattern Table 0
@@ -194,3 +218,4 @@ sta PPU_MASK
 -------------------------------------------------------------------
 |   Palettes #3F00-$3FFF
 -------------------------------------------------------------------
+```
