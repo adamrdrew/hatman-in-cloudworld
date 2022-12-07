@@ -37,7 +37,14 @@ WaitFirstVBlank:
 ClearRAM:
     sta $0000,x ; Store value in A (0) in memory address $0 + x (You can't just say x, you gotta do this weird little add) 
     sta $0100,x
+    
+    ;This is the OAM copy
+    ;It is a special case where it needs to have FF as its default value
+    ;Or we'll end up with noise in the upper left corner
+    lda $FF
     sta $0200,x
+
+    lda #0
     sta $0300,x
     sta $0400,x
     sta $0500,x

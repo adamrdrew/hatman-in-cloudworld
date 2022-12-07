@@ -440,3 +440,44 @@ Each nibble (2 bits) represents the color palette for a group of 4 tiles. So the
 * 01 - Palette 1
 * 10 - Palette 2
 * 11 - Palette 3
+
+### Sprites
+* Sprites are composed of one ore more sprite tiles
+* A max of 64 sprite tiles can be on the screen
+* Sprites can move freely
+* Sprite layer resolution is 256x240
+* Sprites are managed by OAM (Object Attribute Memory) on the PPU
+* OAM is internal to PPU as is 256 bytes of memory
+* Sprites 0-63 each with 4 bytes of memory
+* The 4 bytes that represent a sprite are:
+    * YPos
+    * Tile ID
+    * Attributes (palette, priority, flip) - stored bitwise
+    * XPos
+
+#### Writing to the OAM
+* The standard method is to make a copy of OAM data into RAM
+* NES Programmers use $0200-$02FF for OAM copy
+* You mutate OAM data in RAM
+* Then you stomp on OAM
+* Every frame we start by copying OAM into RAM
+* We do our sprite logic
+* We stomp over at the end of the frame
+* To write to the OAM simply store the starting address of the RAM copy of OAM data to memory position $4014
+
+```
+NMI:
+    lda #$02    ; Starting address of our OAM copy
+    sta $4014   ; Tell OAM to start copying to that starting address
+```
+
+#### Copying from OAM
+* OAM copy is done by DMA and is done by sending the address you want the OAM to copy to
+
+
+### Input
+* The button states are represented as one byte representing a,b,sel,sta,u,d,l,r
+* The controller has 2 states: input and output. In input mode it is gathering user button presses. In output mode it is sending the current values to the NES
+* The programmer has to "strobe" a latch register to switch IO mode
+* And then you need to read byte by byte into a variable
+
