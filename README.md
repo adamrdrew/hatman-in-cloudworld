@@ -10,3 +10,5 @@
 * [NES Dev Wiki](https://www.nesdev.org/wiki/Nesdev_Wiki)
 * [6502 OpCode List](http://www.6502.org/tutorials/6502opcodes.html)
 * [NES LightBox](https://famicom.party/neslightbox/)
+* [This made me completely insane for an hour](https://yeahexp.com/why-in-mos-6502-does-the-sbc-subtract-2-instead-of-1-the-first-time/)
+* [Middle Engine NES Programming Guide](https://www.middle-engine.com/blog/posts/2020/06/23/programming-the-nes-the-6502-in-detail)

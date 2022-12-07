@@ -6,6 +6,8 @@
 .include "../includes/utils.inc"
 
 .segment "ZEROPAGE"
+DebugByte: .res 1
+
 Buttons: .res 1         ; Reserve one by to represent button state (a,b,sel,sta,u,d,l,r)
 Frame:   .res 1         ; Reserve 1 byte to store the framecounter
 Seconds: .res 1         ; Reserve 1 butes to store the second counter, increments every 60 frames
@@ -15,15 +17,35 @@ DrawTextPtr: .res 2
 DrawTextAsciiCode: .res 1
 DrawTextPosPtr: .res 2
 
-PlayerXSpeed: .res 1
-PlayerYSpeed: .res 1
+; 0 if left, 1 if right
 PlayerFacingRight: .res 1
-PlayerMaxSpeed: .res 1
+PlayerMovingDown: .res 1
+; 0 if not pressed, 1 if pressed
+DPADPressed: .res 1
+; See constants
 PlayerState: .res 1
 
+PlayerXSpeed: .res 1
+PlayerYSpeed: .res 1
+
+PlayerXCollisionPoint: .res 1
+PlayerYCollisionPoint: .res 1
+PlayerXCollisionTileX: .res 1
+PlayerYCollisionTileY: .res 1
+
+
+TileLookupPointer: .res 2
+
+TileCollisionLookupXOffset: .res 1
+TileCollisionLookupYOffset: .res 1
+
+
+; The change in position per frame
+MAX_Y_SPEED = 3
 
 .segment "CODE"
 
+    ;Called every NMI to read the buttons
     .proc ReadButtons
             lda #1
             sta Buttons
@@ -48,7 +70,113 @@ PlayerState: .res 1
             rts
     .endproc
 
+    ; X must be set to the x offset to check in pixels
+    ; Y must be set to the y offset to check in pixels
+    ; result will be placed into A as 1 or 0 
+    .proc TestPlayerTileCollision
+            stx TileCollisionLookupXOffset      ; The x offset from PlayerX where we'll look for a tile
+            sty TileCollisionLookupYOffset      ; The y offset from PlayerY where we'll look for a tile
+
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ;; Get coords in pixel-space we'll look for collision
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ldx #03
+            lda OAM_COPY, x                     ; Get the player's X coord. This will be the 3rd byte in from OAM_COPY
+            clc
+            adc TileCollisionLookupXOffset      ; Add the offset to the player's X coord
+            sta PlayerXCollisionPoint           ; Store it in a variable
+
+            lda OAM_COPY                        ; We do the same thing here for Y
+            clc                                 ; Only difference is player Y is first byte in OAM_COPY
+            adc TileCollisionLookupYOffset
+            sta PlayerYCollisionPoint
+
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ;; Convert pixel-space coords to tilemap coords
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            lda PlayerXCollisionPoint           ; X coord in pixel space we want to check for collision
+            lsr                                 ; logical shift 3 times to divide by 32
+            lsr                                 ; We divide by 32 because there are 32 tiles per row
+            lsr
+            sta PlayerXCollisionTileX           ; Store our tilemap-space x coord
+
+            lda PlayerYCollisionPoint           ; Do exactly the same thing for y
+            lsr                                 ; We cheat a little because there are only 30 rows 
+            lsr                                 ; but 32 will still give us the right answer
+            lsr
+            sta PlayerYCollisionTileY
+
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ;; Find the memory address of the row that the tile we're looking for is in
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ldy #0                                          ; We're going to count up from 0 to PlayerYCollisionTileY
+            SetPointer TileLookupPointer, BackgroundData    ; Create a pointer with the address of the background data
+            FindYOffset:
+                cpy PlayerYCollisionTileY
+                beq ExitLoop                                ; If we've reached PlayerYCollisionTileY exit the loop
+                lda TileLookupPointer                       ; Store the lo bit of the tile address for our pointer
+                clc                                         
+                adc #32                                     ; Add 32 bytes to the pointer address to get the address of the next row
+                sta TileLookupPointer
+                lda TileLookupPointer+1                     ; We we need to handle carrying by adding 0 to the hi-byte 
+                adc #0                                      ; of the pointer address. Notice we don't clear carry
+                sta TileLookupPointer+1                     ; This will ensure our hi-byte handle the lo-byte increment correctly
+                iny                                         ; Incremenet our iterator and move to the next iteration
+                jmp FindYOffset
+            ExitLoop:
+           
+            ldy PlayerXCollisionTileX                       ; Store the tile X to use as an offset. 
+            lda (TileLookupPointer), y                      ; Get the byte that represents our tile                
+            cmp #$E0                                        ; We want to know if the tile ID is >= $E0
+            bcc Exit                                        ; We treat all tiles >= $E0 as solid
+                lda #1                                      ; It is, so return TRUE
+                rts
+            Exit:
+            lda #0                                          ; It isn't, so return false
+            rts
+    .endproc
+
+    ; Called whenever the player is moving horizontally
+    ; We handle collission by point checking in front of us
+    ; for a solid tile and then killing PlayerXSpeed if it exists
+    .proc HandleHorizTileCollission
+        ; Set the default X speed
+        ; If no collission occurs this is what we want
+        ; to be applied
+        lda #1
+        sta PlayerXSpeed
+
+        lda PlayerFacingRight
+        cmp #TRUE
+        bne Left
+        Right:
+            ldx #17
+            ldy #8
+            jsr TestPlayerTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #0
+            sta PlayerXSpeed        
+            rts
+        Left:
+            ldx #254
+            ldy #8
+            jsr TestPlayerTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #0
+            sta PlayerXSpeed        
+            rts
+        Exit:
+        rts
+    .endproc
+
+
+    ; Called every NMI to handle the buttons
     .proc ButtonHandler
+        lda #FALSE
+        sta DPADPressed
+
         CheckA:
             lda Buttons
             and #%10000000
@@ -83,31 +211,77 @@ PlayerState: .res 1
             lda Buttons
             and #%00000010
             beq CheckRight
-            ; Set player facing left
-            lda #0
+            lda #$AA
+            sta DebugByte
+            lda #FALSE                  
             sta PlayerFacingRight
-            ; Check that player speed isn't at max
-            lda PlayerXSpeed
-            cmp PlayerMaxSpeed
-            beq CheckRight
-                ; Increase Player Speed
-                inc PlayerXSpeed
+            lda #TRUE
+            sta DPADPressed
         CheckRight:
             lda Buttons
             and #%00000001
             beq Exit
-            ; Set player facing right
-            lda #1
+            lda #$BB
+            sta DebugByte
+            lda #TRUE            
             sta PlayerFacingRight
-            ; Check that player speed isn't at max
-            lda PlayerXSpeed
-            cmp PlayerMaxSpeed
-            beq Exit
-                ; Increase Player Speed
-                inc PlayerXSpeed
+            lda #TRUE
+            sta DPADPressed
         Exit:
         rts
     .endproc 
+
+    .proc UpdatePlayerSpritePosition
+        lda PlayerFacingRight
+        cmp #TRUE
+        bne Left
+        Right:
+            clc
+            ldx #03
+            lda OAM_COPY, x
+            adc PlayerXSpeed
+            sta OAM_COPY, x
+            clc
+            ldx #07
+            lda OAM_COPY, x
+            adc PlayerXSpeed
+            sta OAM_COPY, x
+            clc
+            ldx #11
+            lda OAM_COPY, x
+            adc PlayerXSpeed
+            sta OAM_COPY, x
+            clc
+            ldx #15
+            lda OAM_COPY, x
+            adc PlayerXSpeed
+            sta OAM_COPY, x
+            jmp Exit
+        Left:
+            sec
+            ldx #03
+            lda OAM_COPY, x
+            sbc PlayerXSpeed
+            sta OAM_COPY, x
+            sec
+            ldx #07
+            lda OAM_COPY, x
+            sbc PlayerXSpeed
+            sta OAM_COPY, x
+            sec
+            ldx #11
+            lda OAM_COPY, x
+            sbc PlayerXSpeed
+            sta OAM_COPY, x
+            sec
+            ldx #15
+            lda OAM_COPY, x
+            sbc PlayerXSpeed
+            sta OAM_COPY, x
+            jmp Exit
+        Exit:
+        rts        
+    .endproc
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
@@ -116,13 +290,13 @@ PlayerState: .res 1
         lda #STATE_IDLE
         sta PlayerState
 
-        ; If PlayerXSpeed > 0 we're walking
-        ldx PlayerXSpeed
-        cpx #0
-        beq SkipXSpeed
+        ; If DPAD is pressed we're walking
+        lda DPADPressed
+        cmp #TRUE
+        bne DontSetWalkState
             lda #STATE_WALKING
             sta PlayerState
-        SkipXSpeed:
+        DontSetWalkState:
 
         Idle:
             ldx PlayerState
@@ -133,63 +307,10 @@ PlayerState: .res 1
             ldx PlayerState
             cpx #STATE_WALKING
             bne Exit
-                dec PlayerXSpeed
-                lda PlayerFacingRight
-                cmp #01
-                bne MoveLeft
-                MoveRight:
-                    clc
-                    ldx #03
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #07
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #11
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #15
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
-
-                    jmp EndMove
-                MoveLeft:
-                    ;left stuff
-                    clc
-                    ldx #03
-                    lda OAM_COPY, x
-                    sbc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #07
-                    lda OAM_COPY, x
-                    sbc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #11
-                    lda OAM_COPY, x
-                    sbc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #15
-                    lda OAM_COPY, x
-                    sbc #4
-                    sta OAM_COPY, x
-                    jmp EndMove
-                EndMove:
+            lda #$CC
+            sta DebugByte
+            jsr HandleHorizTileCollission
+            jsr UpdatePlayerSpritePosition
         Exit:
         rts
     .endproc
@@ -282,16 +403,14 @@ PlayerState: .res 1
         sta BackgroundData
         ; Set background pointer
         SetPointer BackgroundPtr, BackgroundData
-        lda #1
-        sta PlayerMaxSpeed
         lda #STATE_IDLE
         sta PlayerState
-        lda #1
+        lda #TRUE
         sta PlayerFacingRight
-        lda #0
+        lda #FALSE
+        sta DPADPressed
+        lda #1
         sta PlayerXSpeed
-        lda #0
-        sta PlayerYSpeed
 
     PaintBackround:
         jsr LoadPalettes
@@ -328,6 +447,7 @@ PlayerState: .res 1
         jsr ReadButtons
         jsr ButtonHandler
         jsr PlayerStep
+        ;jsr UpdatePlayerSpritePosition
 
         ManageTime:
             inc Frame

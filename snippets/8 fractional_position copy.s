@@ -15,11 +15,21 @@ DrawTextPtr: .res 2
 DrawTextAsciiCode: .res 1
 DrawTextPosPtr: .res 2
 
-PlayerXSpeed: .res 1
-PlayerYSpeed: .res 1
+; This is how much we are moving per frame
+; It is a 16 bit value. We update the low bit
+; when the low bit overflows it carrys which
+; updates the high bit. The high bit is what
+; modulates the sprite position
+PlayerXSpeed: .res 2
+PlayerYSpeed: .res 2
+
 PlayerFacingRight: .res 1
-PlayerMaxSpeed: .res 1
 PlayerState: .res 1
+
+MAXSPEED = 3
+ACCEL = 40
+DRAG = 20
+
 
 
 .segment "CODE"
@@ -83,31 +93,93 @@ PlayerState: .res 1
             lda Buttons
             and #%00000010
             beq CheckRight
-            ; Set player facing left
-            lda #0
-            sta PlayerFacingRight
-            ; Check that player speed isn't at max
-            lda PlayerXSpeed
-            cmp PlayerMaxSpeed
-            beq CheckRight
-                ; Increase Player Speed
-                inc PlayerXSpeed
+            lda #FALSE                  
+            sta PlayerFacingRight   ; Set PlayerFacingRight to 0
+            jsr IncreasePlayerXSpeed
         CheckRight:
             lda Buttons
             and #%00000001
-            beq Exit
-            ; Set player facing right
-            lda #1
-            sta PlayerFacingRight
-            ; Check that player speed isn't at max
-            lda PlayerXSpeed
-            cmp PlayerMaxSpeed
-            beq Exit
-                ; Increase Player Speed
-                inc PlayerXSpeed
+            beq NoButtonPressed
+            lda #TRUE                  ; Load a 1
+            sta PlayerFacingRight   ; Set PlayerFacingRight to 1
+            jsr IncreasePlayerXSpeed
+            jmp Exit
+        NoButtonPressed:
+            lda #0
+            sta PlayerXSpeed+1
+            sta PlayerXSpeed
         Exit:
         rts
     .endproc 
+
+    .proc IncreasePlayerXSpeed
+        lda PlayerXSpeed        ; Load the XSpeed lo-bit
+        clc                     ; Clear carry
+        adc #ACCEL              ; Add ACCESS to the XSpeed lo-bit
+        sta PlayerXSpeed        ; Save the updated lo-bit
+        lda PlayerXSpeed+1      ; Load the XSpeed hi bit
+        adc #0                  ; Add with Carry the 0 to it, which will 
+                                ; increase the hi bit by the carry from the
+                                ; lo bit
+        cmp #MAXSPEED           ; Compare the new hi-bit valye to MAXSPEED
+        bcs Exit                ; If new hi-bit >= MAXSPEED Exit
+        sta PlayerXSpeed+1      ; Save the new XSpeed hi-bit
+        Exit:
+            rts
+    .endproc
+
+
+    .proc UpdatePlayerSpritePosition
+        lda PlayerFacingRight
+        cmp #1
+        bne Left
+        Right:
+            clc
+            ldx #03
+            lda OAM_COPY, x
+            adc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #07
+            lda OAM_COPY, x
+            adc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #11
+            lda OAM_COPY, x
+            adc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #15
+            lda OAM_COPY, x
+            adc PlayerXSpeed+1
+            sta OAM_COPY, x
+            jmp Exit
+        Left:
+            clc
+            ldx #03
+            lda OAM_COPY, x
+            sbc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #07
+            lda OAM_COPY, x
+            sbc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #11
+            lda OAM_COPY, x
+            sbc PlayerXSpeed+1
+            sta OAM_COPY, x
+            clc
+            ldx #15
+            lda OAM_COPY, x
+            sbc PlayerXSpeed+1
+            sta OAM_COPY, x
+            jmp Exit
+        Exit:
+        rts        
+    .endproc
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
@@ -117,7 +189,7 @@ PlayerState: .res 1
         sta PlayerState
 
         ; If PlayerXSpeed > 0 we're walking
-        ldx PlayerXSpeed
+        ldx PlayerXSpeed+1
         cpx #0
         beq SkipXSpeed
             lda #STATE_WALKING
@@ -133,34 +205,28 @@ PlayerState: .res 1
             ldx PlayerState
             cpx #STATE_WALKING
             bne Exit
-                dec PlayerXSpeed
+                ; dec PlayerXSpeed
                 lda PlayerFacingRight
                 cmp #01
                 bne MoveLeft
                 MoveRight:
-                    clc
-                    ldx #03
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
+                    ;clc
+                    ;ldx #07
+                    ;lda OAM_COPY, x
+                    ;adc #4
+                    ;sta OAM_COPY, x
 
-                    clc
-                    ldx #07
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
+                    ;clc
+                    ;ldx #11
+                    ;lda OAM_COPY, x
+                    ;adc #4
+                    ;sta OAM_COPY, x
 
-                    clc
-                    ldx #11
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
-
-                    clc
-                    ldx #15
-                    lda OAM_COPY, x
-                    adc #4
-                    sta OAM_COPY, x
+                    ;clc
+                    ;ldx #15
+                    ;lda OAM_COPY, x
+                    ;adc #4
+                    ;sta OAM_COPY, x
 
                     jmp EndMove
                 MoveLeft:
@@ -191,6 +257,11 @@ PlayerState: .res 1
                     jmp EndMove
                 EndMove:
         Exit:
+        clc
+        ldx #03
+        lda OAM_COPY, x
+        adc PlayerXSpeed+1
+        sta OAM_COPY, x
         rts
     .endproc
 
@@ -283,15 +354,15 @@ PlayerState: .res 1
         ; Set background pointer
         SetPointer BackgroundPtr, BackgroundData
         lda #1
-        sta PlayerMaxSpeed
         lda #STATE_IDLE
         sta PlayerState
         lda #1
         sta PlayerFacingRight
         lda #0
         sta PlayerXSpeed
-        lda #0
+        sta PlayerXSpeed+1
         sta PlayerYSpeed
+        sta PlayerYSpeed+1
 
     PaintBackround:
         jsr LoadPalettes
@@ -327,7 +398,8 @@ PlayerState: .res 1
         
         jsr ReadButtons
         jsr ButtonHandler
-        jsr PlayerStep
+        ;jsr PlayerStep
+        jsr UpdatePlayerSpritePosition
 
         ManageTime:
             inc Frame
