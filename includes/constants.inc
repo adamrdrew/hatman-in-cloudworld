@@ -25,4 +25,6 @@ STATE_TAKING_DAMAGE = 04
 TRUE    = 1
 FALSE   = 0
 
+MAX_ACTORS = 10
+
 ; APU Registers

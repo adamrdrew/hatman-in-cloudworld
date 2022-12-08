@@ -4,6 +4,7 @@
 .include "includes/header.inc"
 .include "includes/init.inc"
 .include "includes/utils.inc"
+.include "includes/actors.inc"
 
 ; This is where our ZeroPage and all our global variables are defined.
 .include "includes/variables.inc"
@@ -122,8 +123,8 @@
         lda #%00011110
         sta PPU_MASK    ; Setting the mask ensures we show the background
 
-    MainLoop:
-        jmp MainLoop
+    InifiniteLoop:
+        jmp InifiniteLoop
 
     NMI:
         ; Copy sprite data to OAM

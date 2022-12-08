@@ -72,3 +72,6 @@ PlayerYCollisionTileY: .res 1
 TileCollisionLookupXOffset: .res 1
 TileCollisionLookupYOffset: .res 1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+Actors:    .res MAX_ACTORS * .sizeof(Actor);

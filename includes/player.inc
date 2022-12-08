@@ -38,7 +38,6 @@
             ;; Find the memory address of the row that the tile we're looking for is in
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ldy #0                                          ; We're going to count up from 0 to PlayerYCollisionTileY
-                ; Create a pointer with the address of the background data
             CopyPointer BackgroundPtr, TileLookupPointer    ; Make a copy of the global Background Pointer
             FindYOffset:
                 cpy PlayerYCollisionTileY
@@ -100,50 +99,6 @@
         rts
     .endproc
 
-    ; Called every frame. Because of gravity we will always either 
-    ; be moving up or down. Collisions stop Y axis movement
-    .proc Player_HandleVerticalTileCollission
-
-        ; By default gravity exerts a contant downward pressure
-        ; of 1 pixel per frame
-        ; The player's movement in the Y dimension is (PlayerY + Gravity) - PlayerYMovement
-        ; If a collision above is detected PlayerYMovement is set to 0
-        ; If a collision below is detected Gravity is set to 0
-        lda #02
-        sta Gravity
-
-        ; Our default assumption is that the player is not on the ground
-        ; We need a gravity directed colission to tell us we are on the ground
-        lda #FALSE
-        sta PlayerIsOnTheGround
-
-        lda PlayerYSpeed                    ; Get the PlayerYSpeed 
-        cmp Gravity                         ; Compare it to gravity
-        bcs Up                              ; If PlayerYSpeed is great than Gravity we're going up
-        Down:
-            ldx #8
-            ldy #17
-            jsr Player_TestTileCollision
-            cmp #TRUE
-            bne Exit
-            lda #0
-            sta Gravity                     ; We hit a tile below. Set Gravity to 0
-            lda #TRUE
-            sta PlayerIsOnTheGround    
-            rts
-        Up:
-            ldx #8
-            ldy #254
-            jsr Player_TestTileCollision
-            cmp #TRUE
-            bne Exit
-            lda #0
-            sta PlayerYSpeed                ; We git a tile above. Set PlayerYSpeed to 0       
-            rts
-        Exit:
-        rts
-    .endproc
-
     .proc Player_UpdateSpritePositionHorizontal
         lda Frame
         cmp #2
@@ -198,6 +153,74 @@
             jmp Exit
         Exit:
         rts        
+    .endproc
+
+
+    ; Called every frame. Because of gravity we will always either 
+    ; be moving up or down. Collisions stop Y axis movement
+    .proc Player_HandleVerticalTileCollission
+
+        ; By default gravity exerts a contant downward pressure
+        ; of 1 pixel per frame
+        ; The player's movement in the Y dimension is (PlayerY + Gravity) - PlayerYMovement
+        ; If a collision above is detected PlayerYMovement is set to 0
+        ; If a collision below is detected Gravity is set to 0
+        lda #02
+        sta Gravity
+
+        ; Our default assumption is that the player is not on the ground
+        ; We need a gravity directed colission to tell us we are on the ground
+        lda #FALSE
+        sta PlayerIsOnTheGround
+
+        lda PlayerYSpeed                    ; Get the PlayerYSpeed 
+        cmp Gravity                         ; Compare it to gravity
+        bcs Up                              ; If PlayerYSpeed is great than Gravity we're going up
+        Down:
+            ldx #8
+            ldy #18             ; Sprite height is initial offset
+            jsr Player_TestTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #0
+            sta Gravity                     ; We hit a tile below. Set Gravity to 0
+            lda #TRUE
+            sta PlayerIsOnTheGround    
+            jmp Player_BackOutOfFloor
+            rts
+        Up:
+            ldx #8
+            ldy #254
+            jsr Player_TestTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #0
+            sta PlayerYSpeed                ; We git a tile above. Set PlayerYSpeed to 0       
+            rts
+        Exit:
+        rts
+    .endproc
+
+    .proc Player_BackOutOfFloor
+        Backoff:
+        ldx #8
+        ldy #17             ; Sprite height is initial offset
+        jsr Player_TestTileCollision
+        cmp #FALSE
+        beq ExitBackoff
+            dec OAM_COPY
+            jmp Backoff
+        ExitBackoff:
+        lda OAM_COPY
+        ldx #04
+        sta OAM_COPY, x
+        clc
+        adc #08
+        ldx #08
+        sta OAM_COPY, x
+        ldx #12
+        sta OAM_COPY, x
+        rts
     .endproc
 
     .proc Player_UpdateSpritePositionVertical
@@ -262,17 +285,14 @@
 
         lda AButtonPressed
         cmp #TRUE
-        bne PlayerCannotJump
+        bne ExitAButtonHandler
             lda PlayerIsOnTheGround
             cmp #TRUE
-            bne PlayerCannotJump
+            bne ExitAButtonHandler
                 lda #10
                 sta PlayerYSpeed 
+        ExitAButtonHandler:
 
-
-
-
-        PlayerCannotJump:
         ; Because of the constant downward force of gravity we are always potentially
         ; moving on the Y axis
         jsr Player_HandleVerticalTileCollission
