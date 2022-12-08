@@ -149,7 +149,7 @@ MAX_Y_SPEED = 3
         ; Set the default X speed
         ; If no collission occurs this is what we want
         ; to be applied
-        lda #1
+        lda #2
         sta PlayerXSpeed
 
         lda PlayerFacingRight
@@ -286,6 +286,10 @@ MAX_Y_SPEED = 3
     .endproc 
 
     .proc UpdatePlayerSpritePositionHorizontal
+        lda Frame
+        cmp #2
+        bcc Exit
+
         lda PlayerFacingRight
         cmp #TRUE
         bne Left
@@ -601,7 +605,7 @@ MAX_Y_SPEED = 3
 
     ;This is tile data that must be copied to the nametable
     BackgroundData:
-        .incbin "resources/simple_screen.nam"
+        .incbin "resources/lvl1.nam"
         
     TextMessage:
         .byte "LIVES 03", $0
@@ -634,7 +638,7 @@ MAX_Y_SPEED = 3
 
 ;Load CHAR_ROM pattern tables
 .segment "CHARS"
-.incbin "resources/hatman.chr"
+.incbin "resources/cloudworld.chr"
 
 ; $FFFA
 .segment "VECTORS"
