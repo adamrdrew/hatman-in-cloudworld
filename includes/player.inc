@@ -233,50 +233,64 @@
         rts
     .endproc
 
+    ; This method moves the plater in accordance with both
+    ; Gravity and the player's upward speed (jump)
     .proc Player_UpdateSpritePositionVertical
-            lda Frame
-            cmp #2
-            bcc Exit
+        ; This is a debounce
+        ; Because we don't have subframe movement we instead debounce frames
+        ; and only move on some frames. This simulates subframe movement
+        lda Frame
+        cmp #2
+        bcc Exit
 
-            clc
-            lda OAM_COPY
-            adc Gravity
-            sec
-            sbc PlayerYSpeed
-            sta OAM_COPY
+        clc
+        lda OAM_COPY
+        adc Gravity
+        sec
+        sbc PlayerYSpeed
+        sta OAM_COPY
 
-            clc
-            ldx #04
-            lda OAM_COPY, x
-            adc Gravity
-            sec
-            sbc PlayerYSpeed
-            sta OAM_COPY, x
+        clc
+        ldx #04
+        lda OAM_COPY, x
+        adc Gravity
+        sec
+        sbc PlayerYSpeed
+        sta OAM_COPY, x
 
-            clc
-            ldx #8
-            lda OAM_COPY, x
-            adc Gravity
-            sec
-            sbc PlayerYSpeed
-            sta OAM_COPY, x
+        clc
+        ldx #8
+        lda OAM_COPY, x
+        adc Gravity
+        sec
+        sbc PlayerYSpeed
+        sta OAM_COPY, x
 
-            clc
-            ldx #12
-            lda OAM_COPY, x
-            adc Gravity
-            sec
-            sbc PlayerYSpeed
-            sta OAM_COPY, x
+        clc
+        ldx #12
+        lda OAM_COPY, x
+        adc Gravity
+        sec
+        sbc PlayerYSpeed
+        sta OAM_COPY, x
 
-            lda PlayerYSpeed
-            cmp #0
-            beq Exit
-                dec PlayerYSpeed 
-   
-            Exit:
-            rts
+        ; When jumping we want to reduce the player's upward Y speed 
+        ; by 1 every frame. This gives us a nice natural feeling arc
+        jsr ReducePlayerYSpeedIfGreaterThanZero
+        
+        Exit:
+        rts
     .endproc
+
+    .proc ReducePlayerYSpeedIfGreaterThanZero
+        lda PlayerYSpeed
+        cmp #0
+        beq Exit
+            dec PlayerYSpeed 
+        Exit:
+        rts
+    .endproc
+
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
