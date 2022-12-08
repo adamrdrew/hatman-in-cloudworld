@@ -25,17 +25,40 @@
 
     ; Called every NMI to handle the buttons
     .proc Controller_ButtonHandler
+        ; Buttons that can be held down must be initialized to false
+        ; at the start of every frame and then set to pressed if pressed detected
+        ; 
+        ; Buttons that must be pressed and releases should be set to false
+        ; if they are detected to not being pressed, and true if detected
+        ; See DPAD vs A Buttton
         lda #FALSE
         sta DPADPressed
-        sta AButtonPressed
 
         CheckA:
             lda Buttons
             and #%10000000
-            beq CheckB
-            lda #TRUE
-            sta AButtonPressed
-            ; Do A Stuff
+            beq AButton_HardwareNotPressed
+                lda AButtonReleased
+                cmp #FALSE
+                ; The physical hardware button is pressed, but the released flag hasn't been set
+                ; this means the player is holding the button down
+                ; We clean the AButtonPressed flag so that any logic that triggers on that doesn't happen
+                ; and do nothing else
+                ; The player will need to release the button and then press again to pass this guard
+                beq AButton_ClearPressedFlag
+                    lda #TRUE
+                    sta AButtonPressed
+                    lda #FALSE
+                    sta AButtonReleased
+                    jmp CheckB
+            ; If the physical hardware button isn't pressed then we can clear both of
+            ; our status flags. 
+            AButton_HardwareNotPressed:
+                lda #TRUE
+                sta AButtonReleased
+            AButton_ClearPressedFlag:
+                lda #FALSE
+                sta AButtonPressed
         CheckB:
             lda Buttons
             and #%01000000

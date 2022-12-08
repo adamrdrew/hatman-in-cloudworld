@@ -15,7 +15,11 @@ PlayerFacingRight: .res 1
 PlayerMovingDown: .res 1
 ; 0 if not pressed, 1 if pressed
 DPADPressed: .res 1
+
+; Buttons that can't be held require 2 variables to track: Pressed and Released
 AButtonPressed: .res 1
+AButtonReleased: .res 1
+
 ; See constants
 PlayerState: .res 1
 

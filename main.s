@@ -106,6 +106,7 @@
         sta PlayerState
         lda #TRUE
         sta PlayerFacingRight
+        sta AButtonReleased
         lda #FALSE
         sta DPADPressed
         sta AButtonPressed
