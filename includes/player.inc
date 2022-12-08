@@ -178,7 +178,7 @@
         bcs Up                              ; If PlayerYSpeed is great than Gravity we're going up
         Down:
             ldx #8
-            ldy #18             ; Sprite height is initial offset
+            ldy #17             ; Sprite height is initial offset
             jsr Player_TestTileCollision
             cmp #TRUE
             bne Exit
@@ -186,7 +186,7 @@
             sta Gravity                     ; We hit a tile below. Set Gravity to 0
             lda #TRUE
             sta PlayerIsOnTheGround    
-            jmp Player_BackOutOfFloor
+            jmp Player_CorrectPositionAfterFal
             rts
         Up:
             ldx #8
@@ -201,7 +201,17 @@
         rts
     .endproc
 
-    .proc Player_BackOutOfFloor
+    ; After falling, the player may end up in a floor tile
+    ; This is because the fall amount is more than 1px, so we may
+    ; not detect the tile collision until we've already passed through it some
+    ;
+    ; This method corrects that by looping a look 1 px below the player, and 
+    ; if it is found move the player's position up one px, until eventually we 
+    ; don't detect a tile anymore
+    ;
+    ; This is called in Player_HandleVerticalTileCollission and is called 
+    ; after detecting a collision
+    .proc Player_CorrectPositionAfterFall
         Backoff:
         ldx #8
         ldy #17             ; Sprite height is initial offset
