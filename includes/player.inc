@@ -178,7 +178,7 @@
         bcs Up                              ; If PlayerYSpeed is great than Gravity we're going up
         Down:
             ldx #8
-            ldy #17             ; Sprite height is initial offset
+            ldy #18             ; Sprite height is initial offset
             jsr Player_TestTileCollision
             cmp #TRUE
             bne Exit
@@ -186,7 +186,7 @@
             sta Gravity                     ; We hit a tile below. Set Gravity to 0
             lda #TRUE
             sta PlayerIsOnTheGround    
-            jmp Player_CorrectPositionAfterFal
+            jmp Player_CorrectPositionAfterFall
             rts
         Up:
             ldx #8
