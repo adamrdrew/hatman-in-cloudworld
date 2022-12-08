@@ -4,6 +4,9 @@
 ; It is the first byte in memory so it is easy to find and watch
 DebugByte: .res 1
 
+TileLookupPointer: .res 2
+TileLookupPointerDebug: .res 2
+
 
 Buttons: .res 1         ; Reserve one by to represent button state (a,b,sel,sta,u,d,l,r)
 Frame:   .res 1         ; Reserve 1 byte to store the framecounter
@@ -64,7 +67,7 @@ PlayerYCollisionTileY: .res 1
 ; are searching at. Because the tile map is longer than an 8 bit number can hold
 ; we have to search in batches. We use this variable to hold a pointer to our 
 ; current position
-TileLookupPointer: .res 2
+; TileLookupPointer: .res 2
 ; These coordinates are used when searching through the tile data array
 TileCollisionLookupXOffset: .res 1
 TileCollisionLookupYOffset: .res 1

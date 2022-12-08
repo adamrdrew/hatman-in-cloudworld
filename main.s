@@ -13,11 +13,12 @@
 
     .include "includes/controller.inc"
     .include "includes/player.inc"
+    .include "includes/levels/1_level.inc"
 
     .proc LoadSprites
         ldx $00
         WhileSpriteData:
-            lda SpriteData, x
+            lda LevelOne_SpriteData, x
             sta OAM_COPY, x
             inx
             cpx #16
@@ -59,7 +60,7 @@
         bit PPU_STATUS
         ReadPaletteBytes:
             ; x = PaletteData[y]
-           ldx PaletteData,y
+           ldx LevelOne_PaletteData,y
            ; ppu_data_write(x)
            stx PPU_DATA
            iny ; i++
@@ -148,23 +149,6 @@
     IRQ:
         rti ; Return from Interrupt
 
-    ; This is an array, it just looks kinda funny
-    ; It is easy to think of labels as function names, but they are not, the are just
-    ; names for positions in address space. So here we are creating a label called
-    ; PaletteData
-    ; Then we define 16 bytes that follow it. The .byte directive simply sets
-    ; the value at the current spot in address space. So what we've defined here
-    ; is a sequential list of bytes with the label PaletteData assigned to the 
-    ; beginning of the series. It is quite literally an array of bytes.
-    ; And because we know the array's origin address (PaletteData) and its length (32)
-    ; we can iterate through it :)
-    PaletteData:
-        .byte $21,$0D,$16,$20, $21,$0D,$07,$1B, $21,$0D,$3C,$20, $21,$0D,$27,$07 ; Background
-        .byte $21,$0D,$16,$20, $21,$0D,$1A,$2A, $21,$0D,$3C,$20, $21,$0D,$27,$07 ; Sprites
-
-    ;This is tile data that must be copied to the nametable
-    BackgroundData:
-        .incbin "maps/lvl1.nam"
         
     TextMessage:
         .byte "LIVES 03", $0
@@ -186,13 +170,6 @@
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
-
-    SpriteData:
-        ;       Y       Tile    Attrs       X
-        .byte   $80,    $00,    %00000000,  $70
-        .byte   $80,    $01,    %00000000,  $78
-        .byte   $88,    $10,    %00000000,  $70
-        .byte   $88,    $11,    %00000000,  $78
 
 
 ;Load CHAR_ROM pattern tables

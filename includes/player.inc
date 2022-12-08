@@ -38,7 +38,8 @@
             ;; Find the memory address of the row that the tile we're looking for is in
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ldy #0                                          ; We're going to count up from 0 to PlayerYCollisionTileY
-            SetPointer TileLookupPointer, BackgroundData    ; Create a pointer with the address of the background data
+                ; Create a pointer with the address of the background data
+            CopyPointer BackgroundPtr, TileLookupPointer    ; Make a copy of the global Background Pointer
             FindYOffset:
                 cpy PlayerYCollisionTileY
                 beq ExitLoop                                ; If we've reached PlayerYCollisionTileY exit the loop

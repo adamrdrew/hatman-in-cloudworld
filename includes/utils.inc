@@ -24,10 +24,8 @@
 .endmacro
 
 .macro CopyPointer source, dest
-        ldy #0
-        lda source, y
+        lda source
         sta dest
-        ldy #1
-        lda source, y
+        lda source+1
         sta dest+1
 .endmacro
