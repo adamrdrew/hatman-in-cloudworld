@@ -95,27 +95,7 @@
     ; Code of PRG ROM
     Reset:
         INIT_NES
-        lda #0
-        sta Frame
-        sta Seconds
-        sta BackgroundPtr
-        sta BackgroundData
-        ; Set background pointer
-        SetPointer BackgroundPtr, BackgroundData
-        lda #STATE_IDLE
-        sta PlayerState
-        lda #TRUE
-        sta PlayerFacingRight
-        sta AButtonReleased
-        lda #FALSE
-        sta DPADPressed
-        sta AButtonPressed
-        lda #1
-        sta Gravity
-        lda #0
-        sta PlayerYSpeed
-        sta PlayerXSpeed
-        sta PlayerIsOnTheGround
+        INIT_VARIABLES
 
     PaintBackround:
         jsr LoadPalettes

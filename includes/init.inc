@@ -58,3 +58,27 @@ WaitSecondVBlank:
     bit PPU_STATUS
     bpl WaitSecondVBlank
 .endmacro
+
+.macro INIT_VARIABLES
+    lda #0
+    sta Frame
+    sta Seconds
+    sta BackgroundPtr
+    sta BackgroundData
+    ; Set background pointer
+    SetPointer BackgroundPtr, BackgroundData
+    lda #STATE_IDLE
+    sta PlayerState
+    lda #TRUE
+    sta PlayerFacingRight
+    sta AButtonReleased
+    lda #FALSE
+    sta DPADPressed
+    sta AButtonPressed
+    lda #1
+    sta Gravity
+    lda #0
+    sta PlayerYSpeed
+    sta PlayerXSpeed
+    sta PlayerIsOnTheGround
+.endmacro
