@@ -12,7 +12,7 @@ clean:
 
 build: clean
 	ca65 .\main.s -o main.o -g
-	ld65 ppu.o -o hatman_in_cloudworld.nes -C ..\nes.cfg	
+	ld65 main.o -o hatman_in_cloudworld.nes -C nes.cfg	
 
 run: build
 	fceux.exe hatman_in_cloudworld.nes 		
