@@ -123,18 +123,26 @@
         lda #%00011110
         sta PPU_MASK    ; Setting the mask ensures we show the background
 
-    InifiniteLoop:
-        jmp InifiniteLoop
+    GameLoop:
+        jsr Controller_ReadButtons
+        jsr Controller_ButtonHandler
+        jsr Player_Step
+
+        WaitForVBlank:
+            lda IsDrawComplete
+            cmp #FALSE
+            beq WaitForVBlank
+        
+        lda #FALSE
+        sta IsDrawComplete
+
+        jmp GameLoop
 
     NMI:
         ; Copy sprite data to OAM
         lda #$02            ; Where OAM should start copying from $02 means it will copy from $0200-02FF
         sta OAM_DMA_COPY    ; Send the source address to initial DMA copy
         
-        jsr Controller_ReadButtons
-        jsr Controller_ButtonHandler
-        jsr Player_Step
-
 
         ManageTime:
             inc Frame
@@ -145,6 +153,9 @@
             lda #0
             sta Frame
             NotFrameSixty:
+
+        lda #TRUE
+        sta IsDrawComplete
 
         rti ; Return from Interrupt
     IRQ:

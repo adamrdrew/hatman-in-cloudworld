@@ -73,5 +73,7 @@ TileCollisionLookupXOffset: .res 1
 TileCollisionLookupYOffset: .res 1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Set to TRUE at the end of PPU NMI
+IsDrawComplete: .res 1
 
 Actors:    .res MAX_ACTORS * .sizeof(Actor);

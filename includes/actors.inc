@@ -2,8 +2,9 @@
     NULL    = 0
     BULLET  = 1
     CRAWLER = 2
-    FLYER   = 3
     BOUNCER = 4
+    COIN    = 5
+    BOTTLE  = 6
 .endenum
 
 .struct Actor
