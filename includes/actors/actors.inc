@@ -35,7 +35,7 @@
 ; We need to do this before loading a level's actor data
 .proc Actor_ClearAll
     ; Set the default OAM offset
-    lda #17
+    lda #16
     sta ActorOAMOffset
 
     ldx #0
@@ -205,7 +205,6 @@
     IterateOverActors:
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
         beq Exit                            ; If they are equal exit
-        lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
 
         ; Set the current actor
         ; This is a spot in zero page where we can keep the actor
@@ -230,8 +229,10 @@
         lda Actors+Actor::oamOffset, x
         sta CurrentActor+Actor::oamOffset
 
+        lda CurrentActor+Actor::type
+
         ; Running the actors is just a big, dumb case statement
-        RunActorLogic:
+        DrawActorLogic:
             cmp #ActorType::BULLET
             bne :+
                 jmp Actor_Bullet_Draw

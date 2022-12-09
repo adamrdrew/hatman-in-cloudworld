@@ -103,8 +103,8 @@
         ; TODO: This should be factored out into start of level code or something
         jsr Player_LoadSpriteData
         SetPointer LevelActorDataPointer, LevelOne_ActorData
-        ;jsr Actor_LoadLevelActorData
-        ;jsr Actor_LoadSpriteData
+        jsr Actor_LoadLevelActorData
+        jsr Actor_LoadSpriteData
 
         SetPointer DrawTextPtr, TextMessage
         SetPointer DrawTextPosPtr, $2020

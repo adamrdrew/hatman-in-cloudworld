@@ -3,17 +3,17 @@
 .endproc
 
 .proc Actor_Coin_Draw
-    ldx 17;CurrentActor+Actor::oamOffset
+    ldx CurrentActor+Actor::oamOffset
 
     lda CurrentActor+Actor::yPos
     sta OAM_COPY, x
 
     inx
-    lda $03
+    lda #$03
     sta OAM_COPY, x
 
     inx 
-    lda $0
+    lda #$0
     sta OAM_COPY, x
 
     inx

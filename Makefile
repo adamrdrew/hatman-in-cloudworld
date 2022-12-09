@@ -14,7 +14,7 @@ build: clean
 	ca65 .\main.s -o main.o -g
 	ld65 main.o -o hatman_in_cloudworld.nes -C nes.cfg	--dbgfile hatman_in_cloudworld.dbg
 
-run-fxeux: build
+run-fceux: build
 	fceux.exe hatman_in_cloudworld.nes 		
 
 run-messen: build
