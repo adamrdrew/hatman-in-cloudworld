@@ -76,5 +76,28 @@ TileCollisionLookupYOffset: .res 1
 ; Set to TRUE at the end of PPU NMI
 IsDrawComplete: .res 1
 
-Actors:     .res MAX_ACTORS * 6
-NewActor:   .res 6
+; The array of actors
+Actors:     .res MAX_ACTORS * 9
+; The swap space used when creating a new actor
+NewActor:   .res 9
+; The swap space used when working on a specific actor
+CurrentActor: .res 9
+; This holds the pointer to the currently loaded level's
+; actor data. The level pops its level data address
+; into here, and then we read it from here to load the 
+; actors
+LevelActorDataPointer:  .res 2
+
+; These are unfortunate
+; There are places (nested loops) where I need to preserve
+; the contents of the registers
+RegisterCacheX: .res 1
+RegisterCacheY: .res 1
+RegisterCacheA: .res 1
+
+; When adding actors each one has to know where in the OAM it
+; should put its sprite data
+; because actors may have differing tile amounts the offset of 
+; any given actor is based on the actor before it
+; so we need a place to put that when iterating through
+ActorOAMOffset: .res 1

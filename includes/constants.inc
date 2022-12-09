@@ -26,5 +26,7 @@ TRUE    = 1
 FALSE   = 0
 
 MAX_ACTORS = 10
+ACTOR_DATA_EOF_HI = $AE
+ACTOR_DATA_EOF_LO = $0F
 
 ; APU Registers

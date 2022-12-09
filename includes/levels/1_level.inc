@@ -6,9 +6,9 @@ LevelOne_PaletteData:
 LevelOne_BackgroundData:
     .incbin "maps/lvl1.nam"
 
-LevelOne_SpriteData:
-    ;       Y       Tile    Attrs       X
-    .byte   $80,    $00,    %00000000,  $70
-    .byte   $80,    $01,    %00000000,  $78
-    .byte   $88,    $10,    %00000000,  $70
-    .byte   $88,    $11,    %00000000,  $78
+LevelOne_ActorData:
+    ; First byte of actor data is always actor count
+    .byte $01
+    ;      ActorType    xPos    yPos    FacingRight     hitpoints   oam byte size
+    .byte  $03,         $20,    $20,    $01,            $FF,        $04
+

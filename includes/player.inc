@@ -338,3 +338,22 @@
         Exit:
         rts
     .endproc
+
+    ; The player sprites always occupy the first 16 bytes of the OAM_COPY
+    .proc Player_LoadSpriteData
+        ldx $00
+        WhileSpriteData:
+            lda Player_SpriteData, x
+            sta OAM_COPY, x
+            inx
+            cpx #16
+            bne WhileSpriteData
+        rts
+    .endproc
+
+    Player_SpriteData:
+    ;       Y       Tile    Attrs       X
+    .byte   $80,    $00,    %00000000,  $70
+    .byte   $80,    $01,    %00000000,  $78
+    .byte   $88,    $10,    %00000000,  $70
+    .byte   $88,    $11,    %00000000,  $78

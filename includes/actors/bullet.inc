@@ -8,13 +8,19 @@
     sta NewActor+Actor::yPos
     lda PlayerFacingRight
     sta NewActor+Actor::facingRight
-    lda #FALSE
-    sta NewActor+Actor::hasGravity
+    lda 0
+    sta NewActor+Actor::gravity
+    sta NewActor+Actor::xSpeed
+    sta NewActor+Actor::ySpeed
 
     jsr Actor_AddToArray
     rti 
 .endproc
 
 .proc Actor_Bullet_Logic
+    rts
+.endproc
 
+.proc Actor_Bullet_Draw
+    rts
 .endproc

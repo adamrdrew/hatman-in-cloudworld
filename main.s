@@ -13,17 +13,14 @@
 
     .include "includes/controller.inc"
     .include "includes/player.inc"
-    .include "includes/levels/1_level.inc"
     .include "includes/actors/actors.inc"
 
-    .proc LoadSprites
-        ldx $00
-        WhileSpriteData:
-            lda LevelOne_SpriteData, x
-            sta OAM_COPY, x
-            inx
-            cpx #16
-            bne WhileSpriteData
+    .include "includes/levels/1_level.inc"
+
+    .proc DrawSprites
+        ; Copy sprite data to OAM
+        lda #$02            ; Where OAM should start copying from $02 means it will copy from $0200-02FF
+        sta OAM_DMA_COPY    ; Send the source address to initial DMA copy
         rts
     .endproc
 
@@ -102,7 +99,12 @@
     PaintBackround:
         jsr LoadPalettes
         jsr LoadNametable
-        jsr LoadSprites
+
+        ; TODO: This should be factored out into start of level code or something
+        jsr Player_LoadSpriteData
+        SetPointer LevelActorDataPointer, LevelOne_ActorData
+        ;jsr Actor_LoadLevelActorData
+        ;jsr Actor_LoadSpriteData
 
         SetPointer DrawTextPtr, TextMessage
         SetPointer DrawTextPosPtr, $2020
@@ -139,11 +141,7 @@
         jmp GameLoop
 
     NMI:
-        ; Copy sprite data to OAM
-        lda #$02            ; Where OAM should start copying from $02 means it will copy from $0200-02FF
-        sta OAM_DMA_COPY    ; Send the source address to initial DMA copy
-        
-
+        jsr DrawSprites
         ManageTime:
             inc Frame
             lda Frame

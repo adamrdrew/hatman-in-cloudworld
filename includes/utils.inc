@@ -29,3 +29,15 @@
         lda source+1
         sta dest+1
 .endmacro
+
+.macro CacheRegisters
+        stx RegisterCacheX
+        sty RegisterCacheY
+        sta RegisterCacheA
+.endmacro
+
+.macro FetchCachedRegisters
+        ldx RegisterCacheX
+        ldy RegisterCacheY
+        lda RegisterCacheA
+.endmacro
