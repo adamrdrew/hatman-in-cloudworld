@@ -4,7 +4,6 @@
 .include "includes/header.inc"
 .include "includes/init.inc"
 .include "includes/utils.inc"
-.include "includes/actors.inc"
 
 ; This is where our ZeroPage and all our global variables are defined.
 .include "includes/variables.inc"
@@ -15,6 +14,7 @@
     .include "includes/controller.inc"
     .include "includes/player.inc"
     .include "includes/levels/1_level.inc"
+    .include "includes/actors/actors.inc"
 
     .proc LoadSprites
         ldx $00

@@ -76,4 +76,5 @@ TileCollisionLookupYOffset: .res 1
 ; Set to TRUE at the end of PPU NMI
 IsDrawComplete: .res 1
 
-Actors:    .res MAX_ACTORS * .sizeof(Actor);
+Actors:     .res MAX_ACTORS * 6
+NewActor:   .res 6
