@@ -24,3 +24,7 @@
 .proc Actor_Bullet_Draw
     rts
 .endproc
+
+.proc Actor_Bullet_SpriteCollision
+    rts
+.endproc

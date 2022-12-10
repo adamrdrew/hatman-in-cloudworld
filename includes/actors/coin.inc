@@ -56,3 +56,7 @@
 
     rts
 .endproc
+
+.proc Actor_Coin_SpriteCollision
+    rts
+.endproc

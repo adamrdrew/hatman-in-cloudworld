@@ -291,6 +291,23 @@
         rts
     .endproc
 
+    ; Player movement is all handled by mutating OAM COPY directly
+    ; At the end of the logic cycle we need to sync that back to the
+    ; actor struct
+    .proc Player_SyncActorPosition
+        lda OAM_COPY
+        sta CurrentActor+Actor::yPos
+        ldx #3
+        lda OAM_COPY, x
+        sta CurrentActor+Actor::xPos
+        rts
+    .endproc
+
+    .proc Player_Animate
+
+
+    .endproc
+
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
@@ -336,20 +353,9 @@
         Falling:
         Jumping:
         Exit:
+        jsr Player_SyncActorPosition
         rts
     .endproc
-
-    ; The player sprites always occupy the first 16 bytes of the OAM_COPY
-    ;.proc Player_LoadSpriteData
-    ;    ldx $00
-    ;    WhileSpriteData:
-    ;        lda Player_SpriteData, x
-    ;        sta OAM_COPY, x
-    ;        inx
-    ;        cpx #16
-    ;        bne WhileSpriteData
-    ;    rts
-    ;.endproc
 
 .proc Actor_Player_Draw
     ldx CurrentActor+Actor::oamOffset
@@ -429,6 +435,10 @@
     adc #8
     sta OAM_COPY, x
 
+    rts
+.endproc
+
+.proc Actor_Player_SpriteCollision
     rts
 .endproc
 

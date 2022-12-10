@@ -86,11 +86,15 @@ TileCollisionLookupYOffset: .res 1
 IsDrawComplete: .res 1
 
 ; The array of actors
-Actors:     .res 10 * 9
+Actors:     .res 16 * 9
 ; The swap space used when creating a new actor
 NewActor:   .res 9
 ; The swap space used when working on a specific actor
 CurrentActor: .res 9
+; The swap space used for a colliding actor
+CollidingActor: .res 9
+
+
 ; This holds the pointer to the currently loaded level's
 ; actor data. The level pops its level data address
 ; into here, and then we read it from here to load the 
@@ -111,11 +115,14 @@ RegisterCacheA: .res 1
 ; so we need a place to put that when iterating through
 ActorOAMOffset: .res 1
 
-; These variables are use in actor collision code
-; Actor collision is performed by checking for a point in a box
-; It is up to the actor to figure out how it wants to implement that
-ActorCollisionCheckPoint: .res 1
-ActorCollisionCheckBoxTopLeft: .res 1
-ActorCollisionCheckBoxTopRight: .res 1
-ActorCollisionCheckBoxBottomLeft: .res 1
-ActorCollisionCheckBoxBottomRight: .res 1
+; This the point we're going to check for a collision
+; It is the middle of CollidingActor
+; We see if it occurs within CurrentActor
+ActorCollisionPointX: .res 1
+ActorCollisionPointY: .res 1
+; We know the actor's top left because it is in the actor struct, but we don't know its bottom left for the box
+; We figure it out during collission checking and store it here
+ActorCurrentBottomRightX: .res 1
+ActorCurrentBottomRightY: .res 1
+CollisionOccured: .res 1
+
