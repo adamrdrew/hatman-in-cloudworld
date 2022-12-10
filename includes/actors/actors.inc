@@ -1,7 +1,10 @@
 ; These are the actor type IDs that we use to 
 ; assign actors to their logic and what not
+
+MAX_ACTORS = 10
+
 .enum ActorType
-    NULL    = 0
+    NULL    = $FF
     BOTTLE  = 1
     BULLET  = 2
     COIN    = 3
@@ -9,6 +12,7 @@
     FLYER   = 5
     HEART   = 6
     WALKER  = 7
+    PLAYER  = 8
 .endenum
 
 .struct Actor
@@ -30,12 +34,13 @@
 .include "flyer.inc"
 .include "heart.inc"
 .include "walker.inc"
+.include "player.inc"
 
 ; Sets all of the actors in the actor array to type NULL
 ; We need to do this before loading a level's actor data
 .proc Actor_ClearAll
     ; Set the default OAM offset
-    lda #16
+    lda #0
     sta ActorOAMOffset
 
     ldx #0
@@ -103,17 +108,11 @@
         ; Add the current OAM Offset
         clc
         adc ActorOAMOffset
-        ; Add 1 so we aren't stepping on the last tile
-        ; of the previous actor and store it
-        clc
-        adc #1
         sta ActorOAMOffset
 
         CacheRegisters
-
         ; Add the actor we just created to the array
         jsr Actor_AddToArray
-        
         FetchCachedRegisters
 
         ; Decrement x. If we're not equal to 0 we loop back to the top
@@ -123,38 +122,54 @@
     rts
 .endproc
 
+
+
+
+
+
+
+
 .proc Actor_RunAll
     ldx #0
     IterateOverActors:
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
-        beq Exit                            ; If they are equal exit
-        lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
+        
+        bne ProcessActor                            ; If they are equal exit
+            rts
+        ProcessActor:
+            lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
 
-        ; Set the current actor
-        ; This is a spot in zero page where we can keep the actor
-        ; being acted on
-        lda Actors+Actor::type, x
-        sta CurrentActor+Actor::type
-        lda Actors+Actor::xPos, x
-        sta CurrentActor+Actor::xPos
-        lda Actors+Actor::yPos, x
-        sta CurrentActor+Actor::yPos
-        lda Actors+Actor::facingRight, x
-        sta CurrentActor+Actor::facingRight
-        lda Actors+Actor::hitpoints, x
-        sta CurrentActor+Actor::hitpoints
-        lda Actors+Actor::gravity, x
-        sta CurrentActor+Actor::gravity
-        lda Actors+Actor::xSpeed, x
-        sta CurrentActor+Actor::xSpeed
-        lda Actors+Actor::ySpeed, x
-        sta CurrentActor+Actor::ySpeed 
-        lda Actors+Actor::oamOffset, x
-        sta CurrentActor+Actor::oamOffset
+            ; Set the current actor
+            ; This is a spot in zero page where we can keep the actor
+            ; being acted on
+            lda Actors+Actor::type, x
+            sta CurrentActor+Actor::type
+            lda Actors+Actor::xPos, x
+            sta CurrentActor+Actor::xPos
+            lda Actors+Actor::yPos, x
+            sta CurrentActor+Actor::yPos
+            lda Actors+Actor::facingRight, x
+            sta CurrentActor+Actor::facingRight
+            lda Actors+Actor::hitpoints, x
+            sta CurrentActor+Actor::hitpoints
+            lda Actors+Actor::gravity, x
+            sta CurrentActor+Actor::gravity
+            lda Actors+Actor::xSpeed, x
+            sta CurrentActor+Actor::xSpeed
+            lda Actors+Actor::ySpeed, x
+            sta CurrentActor+Actor::ySpeed 
+            lda Actors+Actor::oamOffset, x
+            sta CurrentActor+Actor::oamOffset
 
+            lda CurrentActor+Actor::type
 
         ; Running the actors is just a big, dumb case statement
         RunActorLogic:
+            cmp #ActorType::PLAYER
+            bne :+
+                jmp Actor_Player_Logic
+                jmp NextActor
+            :
             cmp #ActorType::BULLET
             bne :+
                 jmp Actor_Bullet_Logic
@@ -196,7 +211,6 @@
             adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
             tax                                 ; transver a back to x
             jmp IterateOverActors               ; move on to the next actor
-    Exit:
     rts
 .endproc
 
@@ -204,12 +218,12 @@
     ldx #0
     IterateOverActors:
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
-        beq Exit                            ; If they are equal exit
-
+        bne LoadCurrentActor                            ; If they are equal exit
+            rts
         ; Set the current actor
         ; This is a spot in zero page where we can keep the actor
         ; being acted on
-
+        LoadCurrentActor:
         lda Actors+Actor::type, x
         sta CurrentActor+Actor::type
         lda Actors+Actor::xPos, x
@@ -231,44 +245,52 @@
 
         lda CurrentActor+Actor::type
 
+        CacheRegisters
+
         ; Running the actors is just a big, dumb case statement
         DrawActorLogic:
+            cmp #ActorType::PLAYER
+            bne :+
+                jsr Actor_Player_Draw
+                jmp NextActor
+            :
             cmp #ActorType::BULLET
             bne :+
-                jmp Actor_Bullet_Draw
+                jsr Actor_Bullet_Draw
                 jmp NextActor
             :
             cmp #ActorType::CRAWLER
             bne :+
-                jmp Actor_Crawler_Draw
+                jsr Actor_Crawler_Draw
                 jmp NextActor
             :
             cmp #ActorType::WALKER
             bne :+
-                jmp Actor_Walker_Draw
+                jsr Actor_Walker_Draw
                 jmp NextActor
             :
             cmp #ActorType::FLYER
             bne :+
-                jmp Actor_Flyer_Draw
+                jsr Actor_Flyer_Draw
                 jmp NextActor
             :
             cmp #ActorType::COIN
             bne :+
-                jmp Actor_Coin_Draw
+                jsr Actor_Coin_Draw
                 jmp NextActor
             :
             cmp #ActorType::BOTTLE
             bne :+
-                jmp Actor_Bottle_Draw
+                jsr Actor_Bottle_Draw
                 jmp NextActor
             :
             cmp #ActorType::HEART
             bne :+
-                jmp Actor_Heart_Draw
+                jsr Actor_Heart_Draw
                 jmp NextActor
             :
         NextActor:
+            FetchCachedRegisters
             txa                                 ; transfer x to a
             clc                                 ; clear carry flag
             adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
@@ -287,33 +309,35 @@
         beq Exit                            ; If they are equal exit
         lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
         cmp ActorType::NULL                 ; Is it ActorType::NULL?
-        beq AddNewActorToArray              ; We found a free spot
+        bne NextActor                       ; If not null move to next iter
+
+        lda NewActor+Actor::type
+        sta Actors+Actor::type, x
+        lda NewActor+Actor::xPos
+        sta Actors+Actor::xPos, x
+        lda NewActor+Actor::yPos
+        sta Actors+Actor::yPos, x
+        lda NewActor+Actor::facingRight
+        sta Actors+Actor::facingRight, x
+        lda NewActor+Actor::hitpoints
+        sta Actors+Actor::hitpoints, x
+        lda NewActor+Actor::gravity
+        sta Actors+Actor::gravity, x
+        lda NewActor+Actor::xSpeed
+        sta Actors+Actor::xSpeed, x
+        lda NewActor+Actor::ySpeed
+        sta Actors+Actor::ySpeed, x
+        lda NewActor+Actor::oamOffset
+        sta Actors+Actor::oamOffset, x
+
+        jmp Exit
+    
         NextActor:
             txa                             ; transfer x to a
             clc                             ; clear carry flag
             adc #.sizeof(Actor)             ; Jump to the next spot in the array that marks the start of an actor
             tax                             ; transver a back to x
             jmp IterateOverActors           ; move on to the next actor
-
-    AddNewActorToArray:
-    lda NewActor+Actor::type
-    sta Actors+Actor::type, x
-    lda NewActor+Actor::xPos
-    sta Actors+Actor::xPos, x
-    lda NewActor+Actor::yPos
-    sta Actors+Actor::yPos, x
-    lda NewActor+Actor::facingRight
-    sta Actors+Actor::facingRight, x
-    lda NewActor+Actor::hitpoints
-    sta Actors+Actor::hitpoints, x
-    lda NewActor+Actor::gravity
-    sta Actors+Actor::gravity, x
-    lda NewActor+Actor::xSpeed
-    sta Actors+Actor::xSpeed, x
-    lda NewActor+Actor::ySpeed
-    sta Actors+Actor::ySpeed, x
-    lda NewActor+Actor::oamOffset
-    sta Actors+Actor::oamOffset, x
     Exit:
     rts
 .endproc

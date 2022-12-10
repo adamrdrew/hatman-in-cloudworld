@@ -1,18 +1,12 @@
-; Let's learn to load nametables and display background graphics
-
-.include "includes/constants.inc"
 .include "includes/header.inc"
-.include "includes/init.inc"
-.include "includes/utils.inc"
 
-; This is where our ZeroPage and all our global variables are defined.
 .include "includes/variables.inc"
 
-
 .segment "CODE"
-
+    .include "includes/constants.inc"
+    .include "includes/init.inc"
+    .include "includes/utils.inc"
     .include "includes/controller.inc"
-    .include "includes/player.inc"
     .include "includes/actors/actors.inc"
 
     .include "includes/levels/1_level.inc"
@@ -101,7 +95,7 @@
         jsr LoadNametable
 
         ; TODO: This should be factored out into start of level code or something
-        jsr Player_LoadSpriteData
+        ; jsr Player_LoadSpriteData
         SetPointer LevelActorDataPointer, LevelOne_ActorData
         jsr Actor_LoadLevelActorData
         jsr Actor_LoadSpriteData
@@ -128,7 +122,8 @@
     GameLoop:
         jsr Controller_ReadButtons
         jsr Controller_ButtonHandler
-        jsr Player_Step
+        ;jsr Player_Step
+        jsr Actor_RunAll
 
         WaitForVBlank:
             lda IsDrawComplete

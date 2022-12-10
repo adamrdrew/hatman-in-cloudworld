@@ -294,7 +294,7 @@
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
-    .proc Player_Step
+    .proc Actor_Player_Logic
         ; We start every step assuming we're idle
         lda #STATE_IDLE
         sta PlayerState
@@ -340,20 +340,102 @@
     .endproc
 
     ; The player sprites always occupy the first 16 bytes of the OAM_COPY
-    .proc Player_LoadSpriteData
-        ldx $00
-        WhileSpriteData:
-            lda Player_SpriteData, x
-            sta OAM_COPY, x
-            inx
-            cpx #16
-            bne WhileSpriteData
-        rts
-    .endproc
+    ;.proc Player_LoadSpriteData
+    ;    ldx $00
+    ;    WhileSpriteData:
+    ;        lda Player_SpriteData, x
+    ;        sta OAM_COPY, x
+    ;        inx
+    ;        cpx #16
+    ;        bne WhileSpriteData
+    ;    rts
+    ;.endproc
 
-    Player_SpriteData:
+.proc Actor_Player_Draw
+    ldx CurrentActor+Actor::oamOffset
+
+    ; Tile one
+    lda CurrentActor+Actor::yPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$0
+    sta OAM_COPY, x
+
+    inx 
+    lda #$0
+    sta OAM_COPY, x
+
+    inx
+    lda CurrentActor+Actor::xPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile Two
+    lda CurrentActor+Actor::yPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$1
+    sta OAM_COPY, x
+
+    inx 
+    lda #$0
+    sta OAM_COPY, x
+
+    inx
+    lda CurrentActor+Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    ; Tile three
+    lda CurrentActor+Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$10
+    sta OAM_COPY, x
+
+    inx 
+    lda #$0
+    sta OAM_COPY, x
+
+    inx
+    lda CurrentActor+Actor::xPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile four
+    lda CurrentActor+Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$11
+    sta OAM_COPY, x
+
+    inx 
+    lda #$0
+    sta OAM_COPY, x
+
+    inx
+    lda CurrentActor+Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    rts
+.endproc
+
+
+;Player_SpriteData:
     ;       Y       Tile    Attrs       X
-    .byte   $80,    $00,    %00000000,  $70
-    .byte   $80,    $01,    %00000000,  $78
-    .byte   $88,    $10,    %00000000,  $70
-    .byte   $88,    $11,    %00000000,  $78
+;    .byte   $80,    $00,    %00000000,  $70
+;    .byte   $80,    $01,    %00000000,  $78
+;    .byte   $88,    $10,    %00000000,  $70
+;    .byte   $88,    $11,    %00000000,  $78

@@ -4,6 +4,15 @@
 ; It is the first byte in memory so it is easy to find and watch
 DebugByte: .res 1
 
+Coins: .res 1
+Hearts: .res 1
+Keys: .res 1
+Lives: .res 1
+Level: .res 1
+
+; Used for random number generation
+Seed: .res 2
+
 TileLookupPointer: .res 2
 TileLookupPointerDebug: .res 2
 
@@ -77,7 +86,7 @@ TileCollisionLookupYOffset: .res 1
 IsDrawComplete: .res 1
 
 ; The array of actors
-Actors:     .res MAX_ACTORS * 9
+Actors:     .res 10 * 9
 ; The swap space used when creating a new actor
 NewActor:   .res 9
 ; The swap space used when working on a specific actor
@@ -101,3 +110,12 @@ RegisterCacheA: .res 1
 ; any given actor is based on the actor before it
 ; so we need a place to put that when iterating through
 ActorOAMOffset: .res 1
+
+; These variables are use in actor collision code
+; Actor collision is performed by checking for a point in a box
+; It is up to the actor to figure out how it wants to implement that
+ActorCollisionCheckPoint: .res 1
+ActorCollisionCheckBoxTopLeft: .res 1
+ActorCollisionCheckBoxTopRight: .res 1
+ActorCollisionCheckBoxBottomLeft: .res 1
+ActorCollisionCheckBoxBottomRight: .res 1

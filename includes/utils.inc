@@ -41,3 +41,24 @@
         ldy RegisterCacheY
         lda RegisterCacheA
 .endmacro
+
+; I took this from the NES Game Programming Tutorial couse on Pikuma
+; I don not understand this code at all but the course instructor says it
+; is a '16-bit Galois linear feedback shift register with polynomial $039'
+; Yeah, I don't know
+; Returns its value on A, clobbers y, and requires a 2 byte vairable called Seed
+.proc GetRandomNumber
+        ldy #8
+        lda Seed*0
+        :
+        asl
+        rol Seed*1
+        bcc :+
+                eor #$39
+        :
+        dey
+        bne :--
+        sta Seed*0
+        cmp #0
+        rts
+.endproc
