@@ -469,7 +469,29 @@ MAX_ACTORS = 16
     rts
 .endproc
 
+; Called when an actor is deleted. 
+; We need to recalculate the oam offsets
+; because now we have a hole in our OAM cache
+.proc Actor_RecalcOAMOffsets
+    rts
+.endproc
 
+; Zeros-out OAM_CACHE and then rebuilds it from the living actors
+.proc Actor_RebuildOAMCache
+    rts
+.endproc
+
+.proc Actor_DeleteCollidingActor
+    ; Mark the actor as null so it can be reused
+    lda ActorType::NULL
+    sta_CollidingActor Actor::type
+
+    ; We now have to rebuild the offsets for the living actors
+    jsr Actor_RecalcOAMOffsets
+
+    ;And rebuild the OAM cache
+    jsr Actor_RebuildOAMCache
+.endproc
 
 .proc Actor_AddToArray
     ldx #0
