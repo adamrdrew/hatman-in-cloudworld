@@ -524,15 +524,16 @@ MAX_ACTORS = 16
 
 .proc Actor_DeleteCollidingActor
     ; Mark the actor as null so it can be reused
-    lda ActorType::NULL
+    lda #ActorType::NULL
     sta_CollidingActor Actor::type
 
     ; We now have to rebuild the offsets for the living actors
     jsr Actor_RecalcOAMOffsets
 
-    ;And rebuild the OAM cache
+    ; Clear the OAM Cache
     jsr Actor_ClearOAMCache
 
+    ; And rebuild it
     jsr Actor_LoadSpriteData
 
     rts
