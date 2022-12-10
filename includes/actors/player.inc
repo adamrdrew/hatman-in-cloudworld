@@ -440,7 +440,7 @@
 .endproc
 
 .proc Actor_Player_SpriteCollision
-    Actor_DeleteCollidingActor
+    jsr Actor_DeleteCollidingActor
     rts
 .endproc
 

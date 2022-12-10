@@ -473,11 +473,52 @@ MAX_ACTORS = 16
 ; We need to recalculate the oam offsets
 ; because now we have a hole in our OAM cache
 .proc Actor_RecalcOAMOffsets
+    ldx #0
+    stx ActorOAMOffset ; Reset the OAM Offset
+    IterateOverActors:
+        cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
+        bne ProcessActor                    ; If they are equal exit
+            rts
+        ProcessActor:
+
+        ; Set the OAM offset
+        lda ActorOAMOffset
+        sta Actors+Actor::oamOffset,x
+
+        ; Calculate OAMOffset for the next actor as it
+        ; is a cumulative thing. We calculate it by 
+        ; looking at the collision point, from which we
+        ; can infer the tile count and thus bytes used in OAM
+        ldy Actors+Actor::collisionPointOffset,x
+        cpy #8
+        bne SetToSixteen
+            clc
+            adc #4
+            jmp NextLoop
+        SetToSixteen:
+            clc
+            adc #$10
+
+        NextLoop:
+            sta ActorOAMOffset
+            txa                                 ; transfer x to a
+            clc                                 ; clear carry flag
+            adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
+            tax                                 ; transver a back to x
+            jmp IterateOverActors               ; move on to the next actor
     rts
 .endproc
 
-; Zeros-out OAM_CACHE and then rebuilds it from the living actors
-.proc Actor_RebuildOAMCache
+; Zeros-out OAM_CACHE 
+.proc Actor_ClearOAMCache
+    lda #0
+    ldy #255
+    CountDown:
+        dey
+        sta OAM_COPY, y
+        cpy #0
+        bne CountDown
+    sta OAM_COPY, y ; catch that off by one :)
     rts
 .endproc
 
@@ -490,7 +531,11 @@ MAX_ACTORS = 16
     jsr Actor_RecalcOAMOffsets
 
     ;And rebuild the OAM cache
-    jsr Actor_RebuildOAMCache
+    jsr Actor_ClearOAMCache
+
+    jsr Actor_LoadSpriteData
+
+    rts
 .endproc
 
 .proc Actor_AddToArray
