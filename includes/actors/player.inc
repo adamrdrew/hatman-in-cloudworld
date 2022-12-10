@@ -440,6 +440,8 @@
 .endproc
 
 .proc Actor_Player_SpriteCollision
+    lda ActorType::NULL
+    sta_CollidingActor Actor::type
     rts
 .endproc
 

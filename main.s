@@ -122,9 +122,8 @@
     GameLoop:
         jsr Controller_ReadButtons
         jsr Controller_ButtonHandler
-        ;jsr Player_Step
         jsr Actor_RunAll
-        ;jsr Actor_CheckCollisions
+        
 
         WaitForVBlank:
             lda IsDrawComplete
@@ -133,6 +132,8 @@
         
         lda #FALSE
         sta IsDrawComplete
+
+        jsr Actor_CheckCollisions
 
         jmp GameLoop
 

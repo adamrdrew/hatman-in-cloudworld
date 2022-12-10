@@ -9,8 +9,8 @@ LevelOne_BackgroundData:
 LevelOne_ActorData:
     ; First byte of actor data is always actor count
     .byte $03
-    ;      ActorType    xPos    yPos    FacingRight     hitpoints   oam byte size in hex
-    .byte   $08,        $80,    $70,    $01,            $03,        $10
-    .byte   $03,        $30,    $30,    $01,            $FF,        $04
-    .byte   $03,        $40,    $40,    $01,            $FF,        $04
+    ;      ActorType    xPos    yPos    FacingRight     hitpoints   col point   oam offset
+    .byte   $08,        $80,    $70,    $01,            $03,        $10,        $10
+    .byte   $03,        $30,    $30,    $01,            $FF,        $08,        $04
+    .byte   $03,        $40,    $40,    $01,            $FF,        $08,        $04
 

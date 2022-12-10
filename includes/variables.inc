@@ -86,9 +86,9 @@ TileCollisionLookupYOffset: .res 1
 IsDrawComplete: .res 1
 
 ; The array of actors
-Actors:     .res 16 * 9
+Actors:     .res 16 * 10
 ; The swap space used when creating a new actor
-NewActor:   .res 9
+NewActor:   .res 10
 ; Pointer to the current actor. Used in a lot of per-actor code
 CurrentActorPtr: .res 2
 ; Pointer to the colliding actor. Used in actor collision code.

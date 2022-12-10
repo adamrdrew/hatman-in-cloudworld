@@ -15,28 +15,17 @@ MAX_ACTORS = 16
     PLAYER  = 8
 .endenum
 
-.enum ActorSpriteSize
-    NULL    = $FF
-    BOTTLE  = 8
-    BULLET  = 8
-    COIN    = 8
-    CRAWLER = 16
-    FLYER   = 16
-    HEART   = 8
-    WALKER  = 16
-    PLAYER  = 16
-.endenum
-
 .struct Actor
-    type            .byte   ; From the enum. Is used to determine what logic to run etc
-    xPos            .byte
-    yPos            .byte
-    facingRight     .byte
-    hitpoints       .byte
-    gravity         .byte
-    xSpeed          .byte
-    ySpeed          .byte
-    oamOffset       .byte
+    type                    .byte   ; From the enum. Is used to determine what logic to run etc
+    xPos                    .byte
+    yPos                    .byte
+    facingRight             .byte
+    hitpoints               .byte
+    gravity                 .byte
+    xSpeed                  .byte
+    ySpeed                  .byte
+    collisionPointOffset    .byte
+    oamOffset               .byte
 .endstruct
 
 .include "bottle.inc"
@@ -55,50 +44,35 @@ MAX_ACTORS = 16
     ; First we need to find the point in the middle of CollidingActor
     ; this is the point we are going to evaluate to see if it is
     ; within CurrentActor's box
-    lda_CollidingActor Actor::oamOffset
-    cmp #04
-    bne SkipFour
-        lda_CollidingActor Actor::xPos
-        clc
-        adc #4
-        sta ActorCollisionPointX
-        lda_CollidingActor Actor::yPos
-        clc
-        adc #4
-        sta ActorCollisionPointY
-    SkipFour:
-    lda_CollidingActor Actor::oamOffset
-    cmp #16
-    bne SkipEight
-        lda_CollidingActor Actor::xPos
-        clc
-        adc #8
-        sta ActorCollisionPointX
-        lda_CollidingActor Actor::yPos
-        clc
-        adc #8
-        sta ActorCollisionPointY
-    SkipEight:
+    lda_CollidingActor Actor::xPos
+    ldy #Actor::collisionPointOffset
+    clc
+    adc (CollidingActorPtr), y
+    sta ActorCollisionPointX
+    lda_CollidingActor Actor::yPos
+    clc
+    adc (CollidingActorPtr), y
+    sta ActorCollisionPointY
     
     ; If pointx is less than actor x exit
     lda_CurrentActor Actor::xPos
     cmp ActorCollisionPointX
-    bcc Exit
+    bcs Exit
 
     ; if point y is less than actor y exit
     lda_CurrentActor Actor::yPos
     cmp ActorCollisionPointY
-    bcc Exit
+    bcs Exit
 
     ; if point x is greater than box x exit
     lda ActorCurrentBottomRightX
     cmp ActorCollisionPointX
-    bcs Exit
+    bcc Exit
 
     ; if point y is greater than box y exit 
     lda ActorCurrentBottomRightY
     cmp ActorCollisionPointY
-    bcs Exit
+    bcc Exit
 
     ; Winner, winner, chicken dinner
     lda #1
@@ -125,8 +99,14 @@ MAX_ACTORS = 16
             lda_CollidingActor Actor::type
 
             ; If we are looking at our own just skip to the next iteration
-            ldy Actor::type
+            ldy #Actor::type
             cmp  (CurrentActorPtr), y
+            bne :+
+                jmp NextActor
+            :
+
+            ; If we are looking at NULL skip
+            cmp  #ActorType::NULL
             bne :+
                 jmp NextActor
             :
@@ -138,11 +118,19 @@ MAX_ACTORS = 16
             cmp #0
             beq NextActor
 
+            lda_CurrentActor Actor::type
+
             ; OK if we are here then we detected a collision between CurrentActor and CollidingActor
             ; Now just route to our collider logic
             ; Notice we exit, not NextActor
             ; We can only handle one collision per actor, per frame
             ; Trying to do more would get really tricky and would cost more memory
+            cmp #ActorType::PLAYER
+            bne :+
+                jsr Actor_Player_SpriteCollision
+                jmp Exit
+            :
+
             cmp #ActorType::BULLET
             bne :+
                 jsr Actor_Bullet_SpriteCollision
@@ -202,58 +190,45 @@ MAX_ACTORS = 16
         bne CheckCollisionsForActor
             jmp Exit
         CheckCollisionsForActor:
-            lda Actors+Actor::type,x
-
+            ; Create CurrentActor pointer
             CreateCurrentActorPointerFromX
+            ; Load A with CurrentActor type
             lda_CurrentActor Actor::type
-
+            
+            cmp #ActorType::NULL
+            beq NextActor
+            
+            ;Cache Registers
             CacheRegisters
 
-            ; OK, this is a bit wild. We need to set up the bounding box
-            ; And to do that we need the width and height of the sprite
-            ; But we don't store that anywhere, and we're already using a LOT of memory
-            ; so I'm not going to add it to the struct. BUT we can infer it from the oamOffset
-            ; If the oamOffset is $04 then the bounding box is 8px wide/tall
-            ; if the oamOffset if $10 then the bounbding box is 16px tall
-            ; Check for an oamOffset of 4 and if so use 8
-            lda_CurrentActor Actor::oamOffset
-            cmp #04
-            bne SkipEight
-                lda_CurrentActor Actor::xPos
-                clc
-                adc #8
-                sta ActorCurrentBottomRightX
-                lda_CurrentActor Actor::yPos
-                clc
-                adc #8
-                sta ActorCurrentBottomRightY
-            SkipEight:
-
-            ; Check for an oamOffset of 16 and, well, use 16
-            lda_CurrentActor Actor::oamOffset
-            cmp #16
-            bne SkipSixteen
-                lda_CurrentActor Actor::xPos
-                clc
-                adc #16
-                sta ActorCurrentBottomRightX
-                lda_CurrentActor Actor::yPos
-                clc
-                adc #16
-                sta ActorCurrentBottomRightY
-            SkipSixteen:
+            ;Load current actor xpos into A
+            lda_CurrentActor Actor::xPos
+            ldy #Actor::collisionPointOffset
+            ; add collisionPointOffset
+            clc
+            adc (CurrentActorPtr), y
+            sta ActorCurrentBottomRightX
+            ; Load current actor ypos into A
+            lda_CurrentActor Actor::yPos
+            ; collision point offset
+            clc
+            adc (CurrentActorPtr), y
+            sta ActorCurrentBottomRightY
 
             ; Call the routine that will iterate over the actors
             ; and check them against this actor
             jsr Actor_CheckCollisionsForCurrentActor
 
+            ;Fetch cached registers
             FetchCachedRegisters
 
-            txa                                 ; transfer x to a
-            clc                                 ; clear carry flag
-            adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
-            tax                                 ; transver a back to x
-            jmp IterateOverActors               ; move on to the next actor
+            NextActor:
+                ; Move on to next actor
+                txa                                 ; transfer x to a
+                clc                                 ; clear carry flag
+                adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
+                tax                                 ; transver a back to x
+                jmp IterateOverActors               ; move on to the next actor
     Exit:
         rts
 .endproc
@@ -270,7 +245,7 @@ MAX_ACTORS = 16
     IterateOverActors:
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
         beq Exit                            ; If it is, exit    
-        lda ActorType::NULL                 ; Load NULL
+        lda #ActorType::NULL                 ; Load NULL
         sta Actors+Actor::type,x            ; Set the actor type
         txa                                 ; transfer x to a
         clc                                 ; clear carry flag
@@ -318,6 +293,10 @@ MAX_ACTORS = 16
         sta NewActor+Actor::gravity
         sta NewActor+Actor::xSpeed
         sta NewActor+Actor::ySpeed
+
+        iny
+        lda (LevelActorDataPointer), y
+        sta NewActor+Actor::collisionPointOffset
 
         ; Set the OAM offset
         lda ActorOAMOffset
@@ -498,7 +477,7 @@ MAX_ACTORS = 16
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
         beq Exit                            ; If they are equal exit
         lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
-        cmp ActorType::NULL                 ; Is it ActorType::NULL?
+        cmp #ActorType::NULL                 ; Is it ActorType::NULL?
         bne NextActor                       ; If not null move to next iter
 
         lda NewActor+Actor::type
@@ -517,6 +496,8 @@ MAX_ACTORS = 16
         sta Actors+Actor::xSpeed, x
         lda NewActor+Actor::ySpeed
         sta Actors+Actor::ySpeed, x
+        lda NewActor+Actor::collisionPointOffset
+        sta Actors+Actor::collisionPointOffset, x
         lda NewActor+Actor::oamOffset
         sta Actors+Actor::oamOffset, x
 
