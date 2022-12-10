@@ -163,49 +163,51 @@ MAX_ACTORS = 10
 
             lda CurrentActor+Actor::type
 
+            CacheRegisters
         ; Running the actors is just a big, dumb case statement
         RunActorLogic:
             cmp #ActorType::PLAYER
             bne :+
-                jmp Actor_Player_Logic
+                jsr Actor_Player_Logic
                 jmp NextActor
             :
             cmp #ActorType::BULLET
             bne :+
-                jmp Actor_Bullet_Logic
+                jsr Actor_Bullet_Logic
                 jmp NextActor
             :
             cmp #ActorType::CRAWLER
             bne :+
-                jmp Actor_Crawler_Logic
+                jsr Actor_Crawler_Logic
                 jmp NextActor
             :
             cmp #ActorType::WALKER
             bne :+
-                jmp Actor_Walker_Logic
+                jsr Actor_Walker_Logic
                 jmp NextActor
             :
             cmp #ActorType::FLYER
             bne :+
-                jmp Actor_Flyer_Logic
+                jsr Actor_Flyer_Logic
                 jmp NextActor
             :
             cmp #ActorType::COIN
             bne :+
-                jmp Actor_Coin_Logic
+                jsr Actor_Coin_Logic
                 jmp NextActor
             :
             cmp #ActorType::BOTTLE
             bne :+
-                jmp Actor_Bottle_Logic
+                jsr Actor_Bottle_Logic
                 jmp NextActor
             :
             cmp #ActorType::HEART
             bne :+
-                jmp Actor_Heart_Logic
+                jsr Actor_Heart_Logic
                 jmp NextActor
             :
         NextActor:
+            FetchCachedRegisters
             txa                                 ; transfer x to a
             clc                                 ; clear carry flag
             adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
