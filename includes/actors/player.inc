@@ -296,10 +296,10 @@
     ; actor struct
     .proc Player_SyncActorPosition
         lda OAM_COPY
-        sta CurrentActor+Actor::yPos
+        sta_CurrentActor Actor::yPos
         ldx #3
         lda OAM_COPY, x
-        sta CurrentActor+Actor::xPos
+        sta_CurrentActor Actor::xPos
         rts
     .endproc
 
@@ -358,10 +358,11 @@
     .endproc
 
 .proc Actor_Player_Draw
-    ldx CurrentActor+Actor::oamOffset
+    lda_CurrentActor Actor::oamOffset
+    tax 
 
     ; Tile one
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor  Actor::yPos
     sta OAM_COPY, x
 
     inx
@@ -373,12 +374,12 @@
     sta OAM_COPY, x
 
     inx
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor  Actor::xPos
     sta OAM_COPY, x
 
     inx
     ; Tile Two
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor  Actor::yPos
     sta OAM_COPY, x
 
     inx
@@ -390,14 +391,14 @@
     sta OAM_COPY, x
 
     inx
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor  Actor::xPos
     clc
     adc #8
     sta OAM_COPY, x
 
     inx
     ; Tile three
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor  Actor::yPos
     clc
     adc #8
     sta OAM_COPY, x
@@ -411,12 +412,12 @@
     sta OAM_COPY, x
 
     inx
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor  Actor::xPos
     sta OAM_COPY, x
 
     inx
     ; Tile four
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor  Actor::yPos
     clc
     adc #8
     sta OAM_COPY, x
@@ -430,7 +431,7 @@
     sta OAM_COPY, x
 
     inx
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor  Actor::xPos
     clc
     adc #8
     sta OAM_COPY, x

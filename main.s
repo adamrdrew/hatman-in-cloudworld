@@ -124,7 +124,7 @@
         jsr Controller_ButtonHandler
         ;jsr Player_Step
         jsr Actor_RunAll
-        jsr Actor_CheckCollisions
+        ;jsr Actor_CheckCollisions
 
         WaitForVBlank:
             lda IsDrawComplete

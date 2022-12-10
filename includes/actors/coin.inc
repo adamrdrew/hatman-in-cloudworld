@@ -1,5 +1,6 @@
 .proc Actor_CoinAnimate
-    ldx CurrentActor+Actor::oamOffset
+    lda_CurrentActor Actor::oamOffset
+    tax
     inx
 
     lda Frame
@@ -37,9 +38,10 @@
 .endproc
 
 .proc Actor_Coin_Draw
-    ldx CurrentActor+Actor::oamOffset
+    lda_CurrentActor Actor::oamOffset
+    tax 
 
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor Actor::yPos
     sta OAM_COPY, x
 
     inx
@@ -51,7 +53,7 @@
     sta OAM_COPY, x
 
     inx
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor Actor::xPos
     sta OAM_COPY, x
 
     rts

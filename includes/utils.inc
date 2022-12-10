@@ -62,3 +62,55 @@
         cmp #0
         rts
 .endproc
+
+; Accepts an struct member label, like Actor::type
+; loads A with the value of that member but handles indirection
+; Caches Y to make sure we don't stomp on it
+.macro lda_CurrentActor memberLabel
+        sty ActorPointerOffsetCache     ; Cache Y
+        ldy #memberLabel                 ; Load struct member label into y
+        lda (CurrentActorPtr), y        ; Load A with the value we're trying to get
+        ldy ActorPointerOffsetCache     ; Restore Y
+.endmacro
+; Same as above but for writing
+.macro sta_CurrentActor memberLabel
+        sty ActorPointerOffsetCache     ; Cache Y
+        ldy #memberLabel                 ; Load struct member label into y
+        sta (CurrentActorPtr), y        ; Store A in the member of the indirected actor
+        ldy ActorPointerOffsetCache     ; Restore Y
+.endmacro
+
+; These two are the same as the above but for the Colliding actor
+.macro lda_CollidingActor memberLabel
+        sty ActorPointerOffsetCache     ; Cache Y
+        ldy #memberLabel                 ; Load struct member label into y
+        lda (CollidingActorPtr), y        ; Load A with the value we're trying to get
+        ldy ActorPointerOffsetCache     ; Restore Y
+.endmacro
+
+.macro sta_CollidingActor memberLabel
+        sty ActorPointerOffsetCache     ; Cache Y
+        ldy #memberLabel                 ; Load struct member label into y
+        sta (CollidingActorPtr), y      ; Store A in the member of the indirected actor
+        ldy ActorPointerOffsetCache     ; Restore Y
+.endmacro
+
+.macro CreateCurrentActorPointerFromX
+        txa
+        clc
+        adc #<Actors
+        sta CurrentActorPtr
+
+        lda #>Actors
+        sta CurrentActorPtr+1
+.endmacro
+
+.macro CreateCollidingActorPointerFromX
+        txa
+        clc
+        adc #<Actors
+        sta CollidingActorPtr
+        
+        lda #>Actors
+        sta CollidingActorPtr+1
+.endmacro

@@ -89,10 +89,10 @@ IsDrawComplete: .res 1
 Actors:     .res 16 * 9
 ; The swap space used when creating a new actor
 NewActor:   .res 9
-; The swap space used when working on a specific actor
-CurrentActor: .res 9
-; The swap space used for a colliding actor
-CollidingActor: .res 9
+; Pointer to the current actor. Used in a lot of per-actor code
+CurrentActorPtr: .res 2
+; Pointer to the colliding actor. Used in actor collision code.
+CollidingActorPtr: .res 2
 
 
 ; This holds the pointer to the currently loaded level's
@@ -107,6 +107,10 @@ LevelActorDataPointer:  .res 2
 RegisterCacheX: .res 1
 RegisterCacheY: .res 1
 RegisterCacheA: .res 1
+
+; This variable is used by the macros that help make reading and writing to
+; the actor structs indirected by pointers easier
+ActorPointerOffsetCache: .res 1
 
 ; When adding actors each one has to know where in the OAM it
 ; should put its sprite data

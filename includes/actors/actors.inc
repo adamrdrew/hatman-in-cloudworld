@@ -55,38 +55,38 @@ MAX_ACTORS = 16
     ; First we need to find the point in the middle of CollidingActor
     ; this is the point we are going to evaluate to see if it is
     ; within CurrentActor's box
-    lda CollidingActor+Actor::oamOffset
+    lda_CollidingActor Actor::oamOffset
     cmp #04
     bne SkipFour
-        lda #4
+        lda_CollidingActor Actor::xPos
         clc
-        adc CollidingActor+Actor::xPos
+        adc #4
         sta ActorCollisionPointX
-        lda #4
+        lda_CollidingActor Actor::yPos
         clc
-        adc CollidingActor+Actor::yPos
+        adc #4
         sta ActorCollisionPointY
     SkipFour:
-    lda CollidingActor+Actor::oamOffset
+    lda_CollidingActor Actor::oamOffset
     cmp #16
     bne SkipEight
-        lda #8
+        lda_CollidingActor Actor::xPos
         clc
-        adc CollidingActor+Actor::xPos
+        adc #8
         sta ActorCollisionPointX
-        lda #8
+        lda_CollidingActor Actor::yPos
         clc
-        adc CollidingActor+Actor::yPos
+        adc #8
         sta ActorCollisionPointY
     SkipEight:
     
     ; If pointx is less than actor x exit
-    lda CurrentActor+Actor::xPos
+    lda_CurrentActor Actor::xPos
     cmp ActorCollisionPointX
     bcc Exit
 
     ; if point y is less than actor y exit
-    lda CurrentActor+Actor::yPos
+    lda_CurrentActor Actor::yPos
     cmp ActorCollisionPointY
     bcc Exit
 
@@ -120,28 +120,13 @@ MAX_ACTORS = 16
             ; Set the CollisingActor
             ; The CollidingActor is what the CurrentActor will use in its 
             ; collision logic if a collision has occured
-            lda Actors+Actor::type, x
-            sta CollidingActor+Actor::type
-            lda Actors+Actor::xPos, x
-            sta CollidingActor+Actor::xPos
-            lda Actors+Actor::yPos, x
-            sta CollidingActor+Actor::yPos
-            lda Actors+Actor::facingRight, x
-            sta CollidingActor+Actor::facingRight
-            lda Actors+Actor::hitpoints, x
-            sta CollidingActor+Actor::hitpoints
-            lda Actors+Actor::gravity, x
-            sta CollidingActor+Actor::gravity
-            lda Actors+Actor::xSpeed, x
-            sta CollidingActor+Actor::xSpeed
-            lda Actors+Actor::ySpeed, x
-            sta CollidingActor+Actor::ySpeed 
-            lda Actors+Actor::oamOffset, x
-            sta CollidingActor+Actor::oamOffset
+            CreateCollidingActorPointerFromX
 
-            lda CollidingActor+Actor::type
+            lda_CollidingActor Actor::type
+
             ; If we are looking at our own just skip to the next iteration
-            cmp  CurrentActor+Actor::type
+            ldy Actor::type
+            cmp  (CurrentActorPtr), y
             bne :+
                 jmp NextActor
             :
@@ -219,26 +204,8 @@ MAX_ACTORS = 16
         CheckCollisionsForActor:
             lda Actors+Actor::type,x
 
-            ; Set the current actor
-            ; We will use the current actor to hold the actor that is checking for colission events
-            lda Actors+Actor::type, x
-            sta CurrentActor+Actor::type
-            lda Actors+Actor::xPos, x
-            sta CurrentActor+Actor::xPos
-            lda Actors+Actor::yPos, x
-            sta CurrentActor+Actor::yPos
-            lda Actors+Actor::facingRight, x
-            sta CurrentActor+Actor::facingRight
-            lda Actors+Actor::hitpoints, x
-            sta CurrentActor+Actor::hitpoints
-            lda Actors+Actor::gravity, x
-            sta CurrentActor+Actor::gravity
-            lda Actors+Actor::xSpeed, x
-            sta CurrentActor+Actor::xSpeed
-            lda Actors+Actor::ySpeed, x
-            sta CurrentActor+Actor::ySpeed 
-            lda Actors+Actor::oamOffset, x
-            sta CurrentActor+Actor::oamOffset
+            CreateCurrentActorPointerFromX
+            lda_CurrentActor Actor::type
 
             CacheRegisters
 
@@ -249,30 +216,30 @@ MAX_ACTORS = 16
             ; If the oamOffset is $04 then the bounding box is 8px wide/tall
             ; if the oamOffset if $10 then the bounbding box is 16px tall
             ; Check for an oamOffset of 4 and if so use 8
-            lda CurrentActor+Actor::oamOffset
+            lda_CurrentActor Actor::oamOffset
             cmp #04
             bne SkipEight
-                lda #8
+                lda_CurrentActor Actor::xPos
                 clc
-                adc CurrentActor+Actor::xPos
+                adc #8
                 sta ActorCurrentBottomRightX
-                lda #8
+                lda_CurrentActor Actor::yPos
                 clc
-                adc CurrentActor+Actor::yPos
+                adc #8
                 sta ActorCurrentBottomRightY
             SkipEight:
 
             ; Check for an oamOffset of 16 and, well, use 16
-            lda CurrentActor+Actor::oamOffset
+            lda_CurrentActor Actor::oamOffset
             cmp #16
             bne SkipSixteen
-                lda #16
+                lda_CurrentActor Actor::xPos
                 clc
-                adc CurrentActor+Actor::xPos
+                adc #16
                 sta ActorCurrentBottomRightX
-                lda #16
+                lda_CurrentActor Actor::yPos
                 clc
-                adc CurrentActor+Actor::yPos
+                adc #16
                 sta ActorCurrentBottomRightY
             SkipSixteen:
 
@@ -395,29 +362,9 @@ MAX_ACTORS = 16
         ProcessActor:
             lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
 
-            ; Set the current actor
-            ; This is a spot in zero page where we can keep the actor
-            ; being acted on
-            lda Actors+Actor::type, x
-            sta CurrentActor+Actor::type
-            lda Actors+Actor::xPos, x
-            sta CurrentActor+Actor::xPos
-            lda Actors+Actor::yPos, x
-            sta CurrentActor+Actor::yPos
-            lda Actors+Actor::facingRight, x
-            sta CurrentActor+Actor::facingRight
-            lda Actors+Actor::hitpoints, x
-            sta CurrentActor+Actor::hitpoints
-            lda Actors+Actor::gravity, x
-            sta CurrentActor+Actor::gravity
-            lda Actors+Actor::xSpeed, x
-            sta CurrentActor+Actor::xSpeed
-            lda Actors+Actor::ySpeed, x
-            sta CurrentActor+Actor::ySpeed 
-            lda Actors+Actor::oamOffset, x
-            sta CurrentActor+Actor::oamOffset
+            CreateCurrentActorPointerFromX
 
-            lda CurrentActor+Actor::type
+            lda_CurrentActor Actor::type
 
             CacheRegisters
         ; Running the actors is just a big, dumb case statement
@@ -482,26 +429,11 @@ MAX_ACTORS = 16
         ; This is a spot in zero page where we can keep the actor
         ; being acted on
         LoadCurrentActor:
-        lda Actors+Actor::type, x
-        sta CurrentActor+Actor::type
-        lda Actors+Actor::xPos, x
-        sta CurrentActor+Actor::xPos
-        lda Actors+Actor::yPos, x
-        sta CurrentActor+Actor::yPos
-        lda Actors+Actor::facingRight, x
-        sta CurrentActor+Actor::facingRight
-        lda Actors+Actor::hitpoints, x
-        sta CurrentActor+Actor::hitpoints
-        lda Actors+Actor::gravity, x
-        sta CurrentActor+Actor::gravity
-        lda Actors+Actor::xSpeed, x
-        sta CurrentActor+Actor::xSpeed
-        lda Actors+Actor::ySpeed, x
-        sta CurrentActor+Actor::ySpeed 
-        lda Actors+Actor::oamOffset, x
-        sta CurrentActor+Actor::oamOffset
+        
+        CreateCurrentActorPointerFromX
 
-        lda CurrentActor+Actor::type
+        lda_CurrentActor Actor::type 
+
 
         CacheRegisters
 
