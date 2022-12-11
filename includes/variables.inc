@@ -61,9 +61,11 @@ ActorYSpeedCache: .res 1
 ActorGravityCache: .res 1
 ActorXSpeedCache: .res 1
 
-; This flag is set when the player collides with a floor tile
-; when this is TRUE we don't so any veritcal movement code
-PlayerIsOnTheGround: .res 1
+; Other actors may care about player position, such as to change direction if
+; he's near by. We sync the player's position to these ever tick so other 
+; actors can use it
+PlayerXPos: .res 1
+PlayerYPos: .res 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Tile Collision Variables

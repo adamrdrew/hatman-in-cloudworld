@@ -60,6 +60,9 @@
         Jumping:
         Exit:
         jsr Actor_Player_Draw
+
+
+
         rts
     .endproc
 
@@ -69,6 +72,7 @@
 
     ; Tile one
     lda_CurrentActor  Actor::yPos
+    sta PlayerYPos
     sta OAM_COPY, x
 
     inx
@@ -81,6 +85,7 @@
 
     inx
     lda_CurrentActor  Actor::xPos
+    sta PlayerXPos
     sta OAM_COPY, x
 
     inx

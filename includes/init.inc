@@ -80,5 +80,5 @@ WaitSecondVBlank:
     lda #0
     sta ActorXSpeedCache
     sta ActorYSpeedCache
-    sta PlayerIsOnTheGround
+    ; sta PlayerIsOnTheGround
 .endmacro
