@@ -111,7 +111,7 @@
             lda #$AA
             sta DebugByte
             lda #FALSE                  
-            sta PlayerFacingRight
+            sta PlayerFacingRightCache
             lda #TRUE
             sta DPADPressed
         CheckRight:
@@ -121,7 +121,7 @@
             lda #$BB
             sta DebugByte
             lda #TRUE            
-            sta PlayerFacingRight
+            sta PlayerFacingRightCache
             lda #TRUE
             sta DPADPressed
         Exit:

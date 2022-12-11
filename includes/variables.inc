@@ -29,7 +29,11 @@ DrawTextAsciiCode: .res 1   ; Reserve one byte for the ascii code we are going t
 DrawTextPosPtr: .res 2      ; Reserve 2 bytes for the pointer to where in tile space we are going to draw the tiles for the text
 
 
-PlayerFacingRight: .res 1   ; 0 if left, 1 if right
+; The player is different from other actors because it accepts controller input
+; and the controller input code may not run in the context of the player's cycle
+; so we cache the player's facingRight value here and use it in control code
+; and then we sync it back to the player struct in his logic cycle
+PlayerFacingRightCache: .res 1   ; 0 if left, 1 if right
 
 ; Buttons that can be held only need one variable
 DPADPressed: .res 1

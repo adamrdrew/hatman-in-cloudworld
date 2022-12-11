@@ -1,8 +1,49 @@
+.proc Actor_WalkerWalkAndForth
+    lda Frame
+    cmp #15
+    bcc Exit
+
+    lda_CurrentActor Actor::isOnGround
+    cmp #TRUE
+    bne Exit
+
+    jsr Actor_UpdateSpritePositionHorizontal
+
+    lda_CurrentActor Actor::facingRight
+    cmp #TRUE
+    bne Left
+    Right:
+        ldx #17
+        ldy #8
+        jsr Actor_TestTileCollision
+        cmp #TRUE
+        bne Exit
+        lda #0
+        sta_CurrentActor Actor::facingRight    
+        rts
+    Left:
+        ldx #254
+        ldy #8
+        jsr Actor_TestTileCollision
+        cmp #TRUE
+        bne Exit
+        lda #1
+        sta_CurrentActor Actor::facingRight           
+        rts
+    Exit:
+    rts
+.endproc
+
 .proc Actor_Walker_Logic
+        lda #1
+        sta_CurrentActor Actor::xSpeed
+
         ; Because of the constant downward force of gravity we are always potentially
         ; moving on the Y axis
         jsr Actor_HandleVerticalTileCollission
         jsr Actor_UpdateSpritePositionVertical
+
+        jsr Actor_WalkerWalkAndForth
 
 
         jsr Actor_Walker_Draw

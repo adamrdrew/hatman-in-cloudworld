@@ -2,3 +2,5 @@
 *.nes
 *.deb
 *.dbg
+
+.VSCodeCounter

@@ -13,6 +13,9 @@
         lda #STATE_IDLE
         sta PlayerState
 
+        lda PlayerFacingRightCache
+        sta_CurrentActor Actor::facingRight
+
         ; If DPAD is pressed we're walking
         lda DPADPressed
         cmp #TRUE

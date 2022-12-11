@@ -81,7 +81,7 @@
     lda #2
     sta_CurrentActor Actor::xSpeed 
 
-    lda PlayerFacingRight
+    lda_CurrentActor Actor::facingRight
     cmp #TRUE
     bne Left
     Right:
@@ -114,7 +114,7 @@
     lda_CurrentActor Actor::xSpeed
     sta ActorXSpeedCache
 
-    lda PlayerFacingRight
+    lda_CurrentActor Actor::facingRight
     cmp #TRUE
     bne Left
     Right:

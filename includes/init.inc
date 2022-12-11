@@ -70,7 +70,7 @@ WaitSecondVBlank:
     lda #STATE_IDLE
     sta PlayerState
     lda #TRUE
-    sta PlayerFacingRight
+    sta PlayerFacingRightCache
     sta AButtonReleased
     lda #FALSE
     sta DPADPressed
