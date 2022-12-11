@@ -1,6 +1,7 @@
 ; Creates a new bullet
 ; Must be called from the step logic of a CurrentActor
 .proc Actor_BulletNew
+
         lda #ActorType::BULLET
         sta NewActor+Actor::type  
         

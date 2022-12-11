@@ -352,16 +352,18 @@ MAX_ACTORS = 16
     IterateOverActors:
         cpx #MAX_ACTORS * .sizeof(Actor)    ; Compare our iterator to the total length of the actor array
         
-        bne ProcessActor                            ; If they are equal exit
+        bne HaventReachedEnd                            ; If they are equal exit
             rts
-        ProcessActor:
-            lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
+        HaventReachedEnd:
+        lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
 
-            CreateCurrentActorPointerFromX
+        cmp ActorType::NULL
+        beq NextActor
 
-            lda_CurrentActor Actor::type
+        CreateCurrentActorPointerFromX
+        lda_CurrentActor Actor::type
 
-            CacheRegisters
+        CacheRegisters
         ; Running the actors is just a big, dumb case statement
         RunActorLogic:
             cmp #ActorType::PLAYER

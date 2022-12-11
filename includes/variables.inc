@@ -88,7 +88,7 @@ IsDrawComplete: .res 1
 ; The array of actors
 Actors:     .res 16 * 11
 ; The swap space used when creating a new actor
-NewActor:   .res 10
+NewActor:   .res 11
 ; Pointer to the current actor. Used in a lot of per-actor code
 CurrentActorPtr: .res 2
 ; Pointer to the colliding actor. Used in actor collision code.

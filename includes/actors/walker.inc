@@ -93,5 +93,11 @@
 .endproc
 
 .proc Actor_Walker_SpriteCollision
-    rts
+    lda_CollidingActor Actor::type
+    cmp #ActorType::BULLET
+    bne Exit
+        jsr Actor_DeleteCurrentActor
+        jsr Actor_DeleteCollidingActor
+    Exit:
+        rts
 .endproc
