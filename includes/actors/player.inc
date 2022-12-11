@@ -76,7 +76,7 @@
     sta OAM_COPY, x
 
     inx
-    lda #$0
+    lda #$30
     sta OAM_COPY, x
 
     inx 

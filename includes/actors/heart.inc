@@ -6,6 +6,3 @@
     rts
 .endproc
 
-.proc Actor_Heart_SpriteCollision
-    rts
-.endproc

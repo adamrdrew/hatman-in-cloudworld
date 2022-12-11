@@ -6,6 +6,3 @@
     rts
 .endproc
 
-.proc Actor_Bottle_SpriteCollision
-    rts
-.endproc

@@ -137,6 +137,7 @@
     lda_CollidingActor Actor::type
     cmp #ActorType::BULLET
     bne Exit
+        jsr Actor_ExplosionNew
         jsr Actor_DeleteCurrentActor
         jsr Actor_DeleteCollidingActor
     Exit:

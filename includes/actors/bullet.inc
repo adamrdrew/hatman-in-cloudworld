@@ -5,11 +5,25 @@
         lda #ActorType::BULLET
         sta NewActor+Actor::type  
         
-        lda_CurrentActor Actor::xPos
+        lda_CurrentActor Actor::facingRight
+        cmp #TRUE
+        bne PutItToTheLeft
+            lda_CurrentActor Actor::xPos
+            clc
+            adc #18
+            jmp SaveIt
+        PutItToTheLeft:
+            lda_CurrentActor Actor::xPos
+            clc
+            adc #249         
+        SaveIt:
         sta NewActor+Actor::xPos
 
         lda_CurrentActor Actor::yPos
+        clc
+        adc #04
         sta NewActor+Actor::yPos
+
 
         lda_CurrentActor Actor::facingRight
         sta NewActor+Actor::facingRight
@@ -17,13 +31,15 @@
         lda #$FF
         sta NewActor+Actor::hitpoints
 
+        ; I am cheating and using gravity to store a framecounter
         lda #0
         sta NewActor+Actor::gravity
+        lda #0
         sta NewActor+Actor::ySpeed
         lda #3
         sta NewActor+Actor::xSpeed
 
-        lda #8
+        lda #4
         sta NewActor+Actor::collisionPointOffset
 
         lda ActorOAMOffset
@@ -47,13 +63,13 @@
     bne MoveLeft
         lda_CurrentActor Actor::xPos
         clc
-        adc #3
+        adc #1
         sta_CurrentActor Actor::xPos
         jmp DoneMoving 
     MoveLeft:
         lda_CurrentActor Actor::xPos
         sec
-        sbc #3
+        sbc #1
         sta_CurrentActor Actor::xPos
     DoneMoving:
 
@@ -64,9 +80,33 @@
     CheckOtherSideOfScreen:
     sec
     cmp #252
-    bcc Exit
+    bcc CheckForBlocks
         jsr Actor_DeleteCurrentActor
     
+    CheckForBlocks:
+        lda_CurrentActor Actor::facingRight
+        cmp #TRUE
+        bne Left
+        Right:
+            ldx #8
+            ldy #4
+            jsr Actor_TestTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #0
+            jsr Actor_ExplosionNew
+            jsr Actor_DeleteCurrentActor    
+            rts
+        Left:
+            ldx #254
+            ldy #4
+            jsr Actor_TestTileCollision
+            cmp #TRUE
+            bne Exit
+            lda #1
+            jsr Actor_ExplosionNew
+            jsr Actor_DeleteCurrentActor           
+            rts
     Exit:
     rts
 .endproc
@@ -79,7 +119,8 @@
     sta OAM_COPY, x
 
     inx
-    lda Frame
+    lda_CurrentActor Actor::gravity
+
     cmp #0
     bne :+
         lda #$02
@@ -106,6 +147,16 @@
     :
     Exit:
 
+    lda_CurrentActor Actor::gravity
+    clc
+    adc #1
+    cmp #60
+    bne SetFrameCounter
+        lda #0
+    SetFrameCounter:
+        sta_CurrentActor Actor::gravity
+
+
     inx 
     lda #$0
     sta OAM_COPY, x
@@ -118,5 +169,18 @@
 .endproc
 
 .proc Actor_Bullet_SpriteCollision
-    rts
+    lda_CollidingActor Actor::type
+    cmp #ActorType::CRAWLER
+    bne :+
+        jsr Actor_ExplosionNew
+        jsr Actor_DeleteCurrentActor
+        jsr Actor_DeleteCollidingActor
+    :
+    cmp #ActorType::WALKER
+    bne :+
+        jsr Actor_ExplosionNew
+        jsr Actor_DeleteCurrentActor
+        jsr Actor_DeleteCollidingActor
+    :
+        rts
 .endproc

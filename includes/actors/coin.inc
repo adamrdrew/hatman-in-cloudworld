@@ -49,7 +49,7 @@
     sta OAM_COPY, x
 
     inx 
-    lda #$0
+    lda #%00000001
     sta OAM_COPY, x
 
     inx
@@ -59,6 +59,3 @@
     rts
 .endproc
 
-.proc Actor_Coin_SpriteCollision
-    rts
-.endproc

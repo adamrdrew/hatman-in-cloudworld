@@ -4,15 +4,16 @@
 MAX_ACTORS = 16
 
 .enum ActorType
-    NULL    = $FF
-    BOTTLE  = 1
-    BULLET  = 2
-    COIN    = 3
-    CRAWLER = 4
-    FLYER   = 5
-    HEART   = 6
-    WALKER  = 7
-    PLAYER  = 8
+    NULL        = $FF
+    BOTTLE      = 1
+    BULLET      = 2
+    COIN        = 3
+    CRAWLER     = 4
+    FLYER       = 5
+    HEART       = 6
+    WALKER      = 7
+    PLAYER      = 8
+    EXPLOSION   = 9
 .endenum
 
 .struct Actor
@@ -37,6 +38,7 @@ MAX_ACTORS = 16
 .include "heart.inc"
 .include "walker.inc"
 .include "player.inc"
+.include "explosion.inc"
 
 .proc Actor_CheckCollisionPoint
     lda #0
@@ -46,33 +48,41 @@ MAX_ACTORS = 16
     ; this is the point we are going to evaluate to see if it is
     ; within CurrentActor's box
     lda_CollidingActor Actor::xPos
-    ldy #Actor::collisionPointOffset
-    clc
-    adc (CollidingActorPtr), y
     sta ActorCollisionPointX
-    lda_CollidingActor Actor::yPos
+    lda_CollidingActor Actor::collisionPointOffset
     clc
-    adc (CollidingActorPtr), y
+    adc ActorCollisionPointX
+    sta ActorCollisionPointX
+
+    lda_CollidingActor Actor::yPos
     sta ActorCollisionPointY
-    
+    lda_CollidingActor Actor::collisionPointOffset
+    clc
+    adc ActorCollisionPointY
+    sta ActorCollisionPointY
+
     ; If pointx is less than actor x exit
     lda_CurrentActor Actor::xPos
     cmp ActorCollisionPointX
+    ; bcs is greater than
     bcs Exit
 
     ; if point y is less than actor y exit
     lda_CurrentActor Actor::yPos
     cmp ActorCollisionPointY
+    ; bcs is greater than
     bcs Exit
 
     ; if point x is greater than box x exit
     lda ActorCurrentBottomRightX
     cmp ActorCollisionPointX
+    ; bcc is less than
     bcc Exit
 
     ; if point y is greater than box y exit 
     lda ActorCurrentBottomRightY
     cmp ActorCollisionPointY
+    ; bcc is less
     bcc Exit
 
     ; Winner, winner, chicken dinner
@@ -83,6 +93,10 @@ MAX_ACTORS = 16
         rts
 .endproc
 
+.proc Actor_TestCall
+    rts
+.endproc
+
 .proc Actor_CheckCollisionsForCurrentActor
     ldx #0
     IterateOverActors:
@@ -90,81 +104,44 @@ MAX_ACTORS = 16
         bne CheckCollisionsAgainstActor
             jmp Exit
         CheckCollisionsAgainstActor:
-            lda Actors+Actor::type,x
 
             ; Set the CollisingActor
             ; The CollidingActor is what the CurrentActor will use in its 
             ; collision logic if a collision has occured
             CreateCollidingActorPointerFromX
 
+            lda_CurrentActor Actor::type
+            sta DebugByte
             lda_CollidingActor Actor::type
-
-            ; If we are looking at our own just skip to the next iteration
-            ldy #Actor::type
-            cmp  (CurrentActorPtr), y
-            bne :+
-                jmp NextActor
-            :
-
-            ; If we are looking at NULL skip
-            cmp  #ActorType::NULL
-            bne :+
-                jmp NextActor
-            :
+            cmp DebugByte
+            beq NextActor
 
             ; Do the collision check
             ; If no collision was found move on to the next actor
+ 
             jsr Actor_CheckCollisionPoint
+
             lda CollisionOccured
             cmp #0
             beq NextActor
 
             lda_CurrentActor Actor::type
 
+
             ; OK if we are here then we detected a collision between CurrentActor and CollidingActor
             ; Now just route to our collider logic
             ; Notice we exit, not NextActor
             ; We can only handle one collision per actor, per frame
             ; Trying to do more would get really tricky and would cost more memory
-            cmp #ActorType::PLAYER
-            bne :+
-                jsr Actor_Player_SpriteCollision
-                jmp Exit
-            :
-
+            ; Also we only perform collision logic for some actor type, most dont need it
             cmp #ActorType::BULLET
             bne :+
                 jsr Actor_Bullet_SpriteCollision
                 jmp Exit
             :
-            cmp #ActorType::CRAWLER
+            cmp #ActorType::PLAYER
             bne :+
-                jsr Actor_Crawler_SpriteCollision
-                jmp Exit
-            :
-            cmp #ActorType::WALKER
-            bne :+
-                jsr Actor_Walker_SpriteCollision
-                jmp Exit
-            :
-            cmp #ActorType::FLYER
-            bne :+
-                jsr Actor_Flyer_SpriteCollision
-                jmp Exit
-            :
-            cmp #ActorType::COIN
-            bne :+
-                jsr Actor_Coin_SpriteCollision
-                jmp Exit
-            :
-            cmp #ActorType::BOTTLE
-            bne :+
-                jsr Actor_Bottle_SpriteCollision
-                jmp Exit
-            :
-            cmp #ActorType::HEART
-            bne :+
-                jsr Actor_Heart_SpriteCollision
+                jsr Actor_Player_SpriteCollision
                 jmp Exit
             :
 
@@ -198,23 +175,35 @@ MAX_ACTORS = 16
             
             cmp #ActorType::NULL
             beq NextActor
-            
+            cmp #ActorType::PLAYER
+            beq DoCollisions
+                cmp #ActorType::BULLET
+                beq DoCollisions
+                    jmp NextActor
+            DoCollisions:
+
             ;Cache Registers
             CacheRegisters
 
-            ;Load current actor xpos into A
-            lda_CurrentActor Actor::xPos
-            ldy #Actor::collisionPointOffset
-            ; add collisionPointOffset
-            clc
-            adc (CurrentActorPtr), y
+            lda_CurrentActor Actor::collisionPointOffset
             sta ActorCurrentBottomRightX
-            ; Load current actor ypos into A
-            lda_CurrentActor Actor::yPos
-            ; collision point offset
+            lda_CurrentActor Actor::xPos
             clc
-            adc (CurrentActorPtr), y
+            adc ActorCurrentBottomRightX
+            clc
+            adc ActorCurrentBottomRightX
+            sta ActorCurrentBottomRightX
+
+
+            lda_CurrentActor Actor::collisionPointOffset
             sta ActorCurrentBottomRightY
+            lda_CurrentActor Actor::yPos
+            clc
+            adc ActorCurrentBottomRightY
+            clc
+            adc ActorCurrentBottomRightY
+            sta ActorCurrentBottomRightY
+
 
             ; Call the routine that will iterate over the actors
             ; and check them against this actor
@@ -276,10 +265,16 @@ MAX_ACTORS = 16
         iny                             ; move to the next byte offset
         ; xPos
         lda (LevelActorDataPointer), y
+        asl ; These chains asls multiply by powers of two
+        asl ; This allows us to store our x and y as tile grid coords so its easier to use
+        asl
         sta NewActor+Actor::xPos
         iny
         ; yPos
         lda (LevelActorDataPointer), y
+        asl
+        asl
+        asl
         sta NewActor+Actor::yPos
         iny
         ; facingRight
@@ -318,12 +313,12 @@ MAX_ACTORS = 16
         bne :+
             clc
             lda ActorOAMOffset
-            adc #4
+            adc #16
             jmp NextLoop
         :
             clc
             lda ActorOAMOffset
-            adc #16
+            adc #04
         
         NextLoop:
             iny
@@ -355,13 +350,12 @@ MAX_ACTORS = 16
         bne HaventReachedEnd                            ; If they are equal exit
             rts
         HaventReachedEnd:
-        lda Actors+Actor::type,x            ; Grab the actor type of the actor we are looking at
-
-        cmp ActorType::NULL
-        beq NextActor
-
+        
         CreateCurrentActorPointerFromX
         lda_CurrentActor Actor::type
+
+        cmp ActorType::NULL
+        beq SkipNull
 
         CacheRegisters
         ; Running the actors is just a big, dumb case statement
@@ -396,18 +390,14 @@ MAX_ACTORS = 16
                 jsr Actor_Coin_Logic
                 jmp NextActor
             :
-            cmp #ActorType::BOTTLE
+            cmp #ActorType::EXPLOSION
             bne :+
-                jsr Actor_Bottle_Logic
-                jmp NextActor
-            :
-            cmp #ActorType::HEART
-            bne :+
-                jsr Actor_Heart_Logic
+                jsr Actor_Explosion_Logic
                 jmp NextActor
             :
         NextActor:
             FetchCachedRegisters
+        SkipNull:
             txa                                 ; transfer x to a
             clc                                 ; clear carry flag
             adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
@@ -476,6 +466,11 @@ MAX_ACTORS = 16
                 jsr Actor_Heart_Draw
                 jmp NextActor
             :
+            cmp #ActorType::EXPLOSION
+            bne :+
+                jsr Actor_Explosion_Draw
+                jmp NextActor
+            :
         NextActor:
             FetchCachedRegisters
             txa                                 ; transfer x to a
@@ -518,12 +513,12 @@ MAX_ACTORS = 16
         cpy #8
         bne :+
             clc
-            adc #4
+            adc #16
             sta ActorOAMOffset
             jmp NextLoop
         :
             clc
-            adc #16
+            adc #4
             sta ActorOAMOffset
 
         NextLoop:

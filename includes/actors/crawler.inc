@@ -76,7 +76,7 @@
     sta OAM_COPY, x
 
     inx 
-    lda #$0
+    lda #%00000010
     sta OAM_COPY, x
 
     inx
@@ -93,7 +93,7 @@
     sta OAM_COPY, x
 
     inx 
-    lda #$0
+    lda #%00000010
     sta OAM_COPY, x
 
     inx
@@ -114,7 +114,7 @@
     sta OAM_COPY, x
 
     inx 
-    lda #$0
+    lda #%00000100
     sta OAM_COPY, x
 
     inx
@@ -133,7 +133,7 @@
     sta OAM_COPY, x
 
     inx 
-    lda #$0
+    lda #%00000100
     sta OAM_COPY, x
 
     inx
@@ -149,6 +149,7 @@
     lda_CollidingActor Actor::type
     cmp #ActorType::BULLET
     bne Exit
+        jsr Actor_ExplosionNew
         jsr Actor_DeleteCurrentActor
         jsr Actor_DeleteCollidingActor
     Exit:

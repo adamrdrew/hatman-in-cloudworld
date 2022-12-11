@@ -123,7 +123,7 @@
         jsr Controller_ReadButtons
         jsr Controller_ButtonHandler
         jsr Actor_RunAll
-        
+        jsr Actor_CheckCollisions
 
         WaitForVBlank:
             lda IsDrawComplete
@@ -132,8 +132,6 @@
         
         lda #FALSE
         sta IsDrawComplete
-
-        jsr Actor_CheckCollisions
 
         jmp GameLoop
 
@@ -150,7 +148,7 @@
             NotFrameSixty:
 
         lda #TRUE
-        sta IsDrawComplete
+        inc IsDrawComplete
 
         rti ; Return from Interrupt
     IRQ:
