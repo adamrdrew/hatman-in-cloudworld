@@ -305,22 +305,36 @@ MAX_ACTORS = 16
         ; Set up the OAM offset for the next actor
         ; by increading it by our oam byte size + 1
         ; First get the oam byte size from the config
-        iny
-        lda (LevelActorDataPointer), y
+        ;iny
+        ;lda (LevelActorDataPointer), y
         ; Add the current OAM Offset
-        clc
-        adc ActorOAMOffset
-        sta ActorOAMOffset
+        ;clc
+        ;adc ActorOAMOffset
+        ;sta ActorOAMOffset
+        lda NewActor+Actor::collisionPointOffset
+        cmp #8
+        bne :+
+            clc
+            lda ActorOAMOffset
+            adc #4
+            jmp NextLoop
+        :
+            clc
+            lda ActorOAMOffset
+            adc #16
+        
+        NextLoop:
+            iny
+            sta ActorOAMOffset
+            CacheRegisters
+            ; Add the actor we just created to the array
+            jsr Actor_AddToArray
+            FetchCachedRegisters
 
-        CacheRegisters
-        ; Add the actor we just created to the array
-        jsr Actor_AddToArray
-        FetchCachedRegisters
-
-        ; Decrement x. If we're not equal to 0 we loop back to the top
-        dex
-        cpx #0
-        bne LoadNextActor
+            ; Decrement x. If we're not equal to 0 we loop back to the top
+            dex
+            cpx #0
+            bne LoadNextActor
     rts
 .endproc
 
@@ -481,6 +495,13 @@ MAX_ACTORS = 16
             rts
         ProcessActor:
 
+        lda Actors+Actor::type, x
+        ; If we are looking at NULL skip
+        cmp  #ActorType::NULL
+        bne :+
+            jmp NextLoop
+        :        
+
         ; Set the OAM offset
         lda ActorOAMOffset
         sta Actors+Actor::oamOffset,x
@@ -491,16 +512,17 @@ MAX_ACTORS = 16
         ; can infer the tile count and thus bytes used in OAM
         ldy Actors+Actor::collisionPointOffset,x
         cpy #8
-        bne SetToSixteen
+        bne :+
             clc
             adc #4
+            sta ActorOAMOffset
             jmp NextLoop
-        SetToSixteen:
+        :
             clc
-            adc #$10
+            adc #16
+            sta ActorOAMOffset
 
         NextLoop:
-            sta ActorOAMOffset
             txa                                 ; transfer x to a
             clc                                 ; clear carry flag
             adc #.sizeof(Actor)                 ; Jump to the next spot in the array that marks the start of an actor
@@ -526,6 +548,24 @@ MAX_ACTORS = 16
     ; Mark the actor as null so it can be reused
     lda #ActorType::NULL
     sta_CollidingActor Actor::type
+
+    ; We now have to rebuild the offsets for the living actors
+    jsr Actor_RecalcOAMOffsets
+
+    ; Clear the OAM Cache
+    jsr Actor_ClearOAMCache
+
+    ; And rebuild it
+    jsr Actor_LoadSpriteData
+
+    rts
+.endproc
+
+
+.proc Actor_DeleteCurrentActor
+    ; Mark the actor as null so it can be reused
+    lda #ActorType::NULL
+    sta_CurrentActor Actor::type
 
     ; We now have to rebuild the offsets for the living actors
     jsr Actor_RecalcOAMOffsets

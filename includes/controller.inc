@@ -62,8 +62,28 @@
         CheckB:
             lda Buttons
             and #%01000000
-            beq CheckSelect
-            ; Do B Stuff
+            beq BButton_HardwareNotPressed
+                lda BButtonReleased
+                cmp #FALSE
+                ; The physical hardware button is pressed, but the released flag hasn't been set
+                ; this means the player is holding the button down
+                ; We clean the AButtonPressed flag so that any logic that triggers on that doesn't happen
+                ; and do nothing else
+                ; The player will need to release the button and then press again to pass this guard
+                beq BButton_ClearPressedFlag
+                    lda #TRUE
+                    sta BButtonPressed
+                    lda #FALSE
+                    sta BButtonReleased
+                    jmp CheckSelect
+            ; If the physical hardware button isn't pressed then we can clear both of
+            ; our status flags. 
+            BButton_HardwareNotPressed:
+                lda #TRUE
+                sta BButtonReleased
+            BButton_ClearPressedFlag:
+                lda #FALSE
+                sta BButtonPressed
         CheckSelect:
             lda Buttons
             and #%00100000

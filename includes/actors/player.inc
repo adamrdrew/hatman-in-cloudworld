@@ -108,6 +108,8 @@
         cmp #TRUE
         bne Left
         Right:
+            lda #TRUE
+            sta_CurrentActor Actor::facingRight
             clc
             ldx #03
             lda OAM_COPY, x
@@ -130,6 +132,8 @@
             sta OAM_COPY, x
             jmp Exit
         Left:
+            lda #FALSE
+            sta_CurrentActor Actor::facingRight
             sec
             ldx #03
             lda OAM_COPY, x
@@ -303,11 +307,15 @@
         rts
     .endproc
 
-    .proc Player_Animate
+    ;.proc PlayerAnimate
 
+    ;jsr
+    ;.endproc
 
+    .proc PlayerShootBullet
+        jsr Actor_BulletNew
+        rts
     .endproc
-
 
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
@@ -333,6 +341,12 @@
                 lda #10
                 sta PlayerYSpeed 
         ExitAButtonHandler:
+
+        lda BButtonPressed
+        cmp #TRUE
+        bne ExitBButtonHandler
+            jsr PlayerShootBullet
+        ExitBButtonHandler:
 
         ; Because of the constant downward force of gravity we are always potentially
         ; moving on the Y axis
@@ -440,8 +454,12 @@
 .endproc
 
 .proc Actor_Player_SpriteCollision
-    jsr Actor_DeleteCollidingActor
-    rts
+    lda_CollidingActor Actor::type
+    cmp #ActorType::COIN
+    bne Exit
+        jsr Actor_DeleteCollidingActor
+    Exit:
+        rts
 .endproc
 
 
