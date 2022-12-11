@@ -63,13 +63,13 @@
     bne MoveLeft
         lda_CurrentActor Actor::xPos
         clc
-        adc #1
+        adc #4
         sta_CurrentActor Actor::xPos
         jmp DoneMoving 
     MoveLeft:
         lda_CurrentActor Actor::xPos
         sec
-        sbc #1
+        sbc #4
         sta_CurrentActor Actor::xPos
     DoneMoving:
 
