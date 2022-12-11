@@ -24,6 +24,7 @@ MAX_ACTORS = 16
     gravity                 .byte
     xSpeed                  .byte
     ySpeed                  .byte
+    isOnGround              .byte
     collisionPointOffset    .byte
     oamOffset               .byte
 .endstruct
@@ -293,6 +294,7 @@ MAX_ACTORS = 16
         sta NewActor+Actor::gravity
         sta NewActor+Actor::xSpeed
         sta NewActor+Actor::ySpeed
+        sta NewActor+Actor::isOnGround
 
         iny
         lda (LevelActorDataPointer), y
@@ -602,6 +604,8 @@ MAX_ACTORS = 16
         sta Actors+Actor::gravity, x
         lda NewActor+Actor::xSpeed
         sta Actors+Actor::xSpeed, x
+        lda NewActor+Actor::isOnGround
+        sta Actors+Actor::isOnGround, x
         lda NewActor+Actor::ySpeed
         sta Actors+Actor::ySpeed, x
         lda NewActor+Actor::collisionPointOffset

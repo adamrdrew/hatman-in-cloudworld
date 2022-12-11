@@ -76,9 +76,9 @@ WaitSecondVBlank:
     sta DPADPressed
     sta AButtonPressed
     lda #1
-    sta Gravity
+    sta ActorGravityCache
     lda #0
-    sta PlayerYSpeed
-    sta PlayerXSpeed
+    sta ActorXSpeedCache
+    sta ActorYSpeedCache
     sta PlayerIsOnTheGround
 .endmacro

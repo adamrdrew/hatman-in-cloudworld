@@ -48,30 +48,30 @@ BButtonReleased: .res 1
 PlayerState: .res 1
 
 ; Player's horizontal movement speed. Used by the player's walking and moving code
-PlayerXSpeed: .res 1
 
-; Player has 3 vertical movement variables that factor into his vertical movement system
-; Player upward movement
-; happens when jumping
-; is quickly reduced over time
-PlayerYSpeed: .res 1
-; Contant downward pressure applied every frame where we aren't on the ground
-Gravity: .res 1
+
+; Actors store their gravity and speed variables in their structs
+; but, we need a place in memory to cache those values to work with them
+; in the movement code
+ActorYSpeedCache: .res 1
+ActorGravityCache: .res 1
+ActorXSpeedCache: .res 1
+
 ; This flag is set when the player collides with a floor tile
 ; when this is TRUE we don't so any veritcal movement code
 PlayerIsOnTheGround: .res 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Player Tile Collision Variables
-;; These variables are private to the player collision code
+;; Actor Tile Collision Variables
+;; These variables are private to the actor collision code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; These two variables define the point that the player is going to check for a tile in pixel space
-PlayerXCollisionPoint: .res 1
-PlayerYCollisionPoint: .res 1
+ActorXCollisionPoint: .res 1
+ActorYCollisionPoint: .res 1
 ; These two are the previous two but recast into tile space. 
-PlayerXCollisionTileX: .res 1
-PlayerYCollisionTileY: .res 1
+ActorXCollisionTileX: .res 1
+ActorYCollisionTileY: .res 1
 ; This is the pointer that is used to hold the position into the tile map that we
 ; are searching at. Because the tile map is longer than an 8 bit number can hold
 ; we have to search in batches. We use this variable to hold a pointer to our 
@@ -86,7 +86,7 @@ TileCollisionLookupYOffset: .res 1
 IsDrawComplete: .res 1
 
 ; The array of actors
-Actors:     .res 16 * 10
+Actors:     .res 16 * 11
 ; The swap space used when creating a new actor
 NewActor:   .res 10
 ; Pointer to the current actor. Used in a lot of per-actor code
