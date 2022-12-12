@@ -27,6 +27,12 @@ $ make run-fceux
 
 And it will build and run in your emulator.
 
+Note: if you are on Linux and installed FCEUX from the snap store you may need to do this:
+
+```bash
+$ make run-fceux-gui
+```
+
 ## Hacking and Developing
 This is Free Software so please feel free to fork and patches are very much welcome :) For development I *highly* recommend using the Messen emulator. Its debugger is fantastic and it really helps with tracking stuff down. Our make targets build with debug symbols so it makes things really nice to debug in Messen.
 
@@ -51,7 +57,7 @@ I went from never having done any NES development before to a decent chunk of a 
 
 Special shout-out to [Gustavo Pezzi](https://github.com/gustavopezzi) - his course [NES Game Programming](https://courses.pikuma.com/courses/take/nes-game-programming-tutorial) was my roadmap and really got me off to a great start. Much of the work in this project (the Actor system for example) scales-up and builds-on his work. He put together a fantastic course and I recommend it highly to anyone who wants to learn NES development.
 
-Another special shout-out to the [Famistudio](https://github.com/BleuBleu/FamiStudio) team. Not only did I write the music and create the sound effects in their Famistudio GUI app, the sound in played by the Famistudio engine for ca65 aseembly. I did not write the sound code, I used theirs and it is *excellent.* Big props to those folks for their fantastic work.
+Another special shout-out to the [Famistudio](https://github.com/BleuBleu/FamiStudio) team. Not only did I write the music and create the sound effects in their Famistudio GUI app, the sound in-game is played by the Famistudio engine for ca65 aseembly. I did not write the sound code, I used theirs and it is *excellent.* Big props to those folks for their fantastic work.
 
 ## Learning from this Repo
 In the `snippets` directory you'll find a bunch of sequentially-numbered assembly files that aren't part of the game. These are the files I wrote as I was learning, step by step. They go through things like basic boot up, talking to the PPU, implementing controls, basic gravity, etc. If you were interested in learning those my be good simple resources to have a look at to see basic concepts in action without a lot of extra stuff going on.
