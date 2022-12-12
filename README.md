@@ -53,7 +53,7 @@ I went from never having done any NES development before to a decent chunk of a 
 * [Famistudio](https://github.com/BleuBleu/FamiStudio)
 * [NEXXT Editor](https://frankengraphics.itch.io/nexxt)
 
-## Speial Thanks
+## Special Thanks
 
 Special shout-out to [Gustavo Pezzi](https://github.com/gustavopezzi) - his course [NES Game Programming](https://courses.pikuma.com/courses/take/nes-game-programming-tutorial) was my roadmap and really got me off to a great start. Much of the work in this project (the Actor system for example) scales-up and builds-on his work. He put together a fantastic course and I recommend it highly to anyone who wants to learn NES development.
 
