@@ -152,6 +152,9 @@
         jsr Actor_ExplosionNew
         jsr Actor_DeleteCurrentActor
         jsr Actor_DeleteCollidingActor
+        lda #02
+        ldx #FAMISTUDIO_SFX_CH3
+        jsr famistudio_sfx_play 
     Exit:
         rts
 .endproc

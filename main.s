@@ -10,9 +10,13 @@
     .include "includes/controller.inc"
     .include "includes/actors/actors.inc"
 
+    ; Levels
     .include "includes/levels/1_level.inc"
     .include "includes/levels/2_level.inc"
+    
+    ; Audio
     .include "lib/famistudio.s"
+    .include "audio/sfx.s"
     .include "audio/song1.s"
     .include "audio/song2.s"
 
@@ -143,6 +147,11 @@
         INIT_NES
         INIT_VARIABLES
   
+        lda #1
+        ldx #<sounds
+        ldy #>sounds
+        jsr famistudio_sfx_init
+
         lda #1
         sta Level
         jsr LoadLevel

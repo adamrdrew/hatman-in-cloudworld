@@ -31,13 +31,19 @@
             cmp #TRUE
             bne ExitAButtonHandler
                 lda #10
-                sta_CurrentActor Actor::ySpeed 
+                sta_CurrentActor Actor::ySpeed  
+                lda #03
+                ldx #FAMISTUDIO_SFX_CH0
+                jsr famistudio_sfx_play 
         ExitAButtonHandler:
 
         lda BButtonPressed
         cmp #TRUE
         bne ExitBButtonHandler
             jsr PlayerShootBullet
+            lda #00
+            ldx #FAMISTUDIO_SFX_CH0
+            jsr famistudio_sfx_play 
         ExitBButtonHandler:
 
         ; Because of the constant downward force of gravity we are always potentially
@@ -156,6 +162,9 @@
     bne Exit
         inc Coins
         jsr Actor_DeleteCollidingActor
+        lda #01
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_play 
     Exit:
         rts
 .endproc
