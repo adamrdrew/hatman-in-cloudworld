@@ -1,6 +1,9 @@
 .proc Actor_CrawlerWalkAndForth
     lda Frame
-    cmp #16
+    jsr GetRandomNumber
+    lsr
+    lsr
+    cmp #32
     bcs Exit
 
     lda_CurrentActor Actor::isOnGround
@@ -28,12 +31,12 @@
             sta_CurrentActor Actor::facingRight    
         rts
     Left:
-        ldx #254
+         ldx #254
         ldy #8
         jsr Actor_TestTileCollision
         cmp #TRUE
         beq UpdateFacingRight
-        ldx #254
+        ldx #253
         ldy #18
         jsr Actor_TestTileCollision
         cmp #TRUE
@@ -57,13 +60,25 @@
 
         jsr Actor_CrawlerWalkAndForth
 
-
         jsr Actor_Crawler_Draw
 
     rts
 .endproc
 
 .proc Actor_Crawler_Draw
+        lda_CurrentActor Actor::facingRight
+        cmp #TRUE 
+        bne :+
+            jsr Actor_Crawler_Draw_Right
+            jmp Exit
+        :
+        jsr Actor_Crawler_Draw_Left
+        
+    Exit:
+    rts
+.endproc
+
+.proc Actor_Crawler_Draw_Right
     lda_CurrentActor Actor::oamOffset
     tax 
 
@@ -134,6 +149,88 @@
 
     inx 
     lda #%00000100
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    rts
+.endproc
+
+.proc Actor_Crawler_Draw_Left
+    lda_CurrentActor Actor::oamOffset
+    tax 
+
+    ; Tile one
+    lda_CurrentActor  Actor::yPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$6F
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000010
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile Two
+    lda_CurrentActor  Actor::yPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$6E
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000010
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    ; Tile three
+    lda_CurrentActor  Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$7F
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000100
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile four
+    lda_CurrentActor  Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$7E
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000100
     sta OAM_COPY, x
 
     inx

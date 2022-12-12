@@ -65,7 +65,7 @@
         Falling:
         Jumping:
         Exit:
-        jsr Actor_Player_Draw
+        jsr Actor_Player_Draw_Right
 
 
 
@@ -73,6 +73,19 @@
     .endproc
 
 .proc Actor_Player_Draw
+        lda_CurrentActor Actor::facingRight
+        cmp #TRUE 
+        bne :+
+            jsr Actor_Player_Draw_Right
+            jmp Exit
+        :
+        jsr Actor_Player_Draw_Left
+        
+    Exit:
+    rts
+.endproc
+
+.proc Actor_Player_Draw_Right
     lda_CurrentActor Actor::oamOffset
     tax 
 
@@ -145,6 +158,91 @@
 
     inx 
     lda #$0
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    rts
+.endproc
+
+
+.proc Actor_Player_Draw_Left
+    lda_CurrentActor Actor::oamOffset
+    tax 
+
+    ; Tile one
+    lda_CurrentActor  Actor::yPos
+    sta PlayerYPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$1
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000000
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    sta PlayerXPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile Two
+    lda_CurrentActor  Actor::yPos
+    sta OAM_COPY, x
+
+    inx
+    lda #$30
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000000
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    ; Tile three
+    lda_CurrentActor  Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$11
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000000
+    sta OAM_COPY, x
+
+    inx
+    lda_CurrentActor  Actor::xPos
+    sta OAM_COPY, x
+
+    inx
+    ; Tile four
+    lda_CurrentActor  Actor::yPos
+    clc
+    adc #8
+    sta OAM_COPY, x
+
+    inx
+    lda #$10
+    sta OAM_COPY, x
+
+    inx 
+    lda #%01000000
     sta OAM_COPY, x
 
     inx

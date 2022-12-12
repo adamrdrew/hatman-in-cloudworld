@@ -1,8 +1,4 @@
 .proc Actor_WalkerWalkAndForth
-    lda Frame
-    cmp #15
-    bcc Exit
-
     lda_CurrentActor Actor::isOnGround
     cmp #TRUE
     bne Exit
@@ -48,6 +44,7 @@
 
         jsr Actor_Walker_Draw
 
+    Exit:
     rts
 .endproc
 

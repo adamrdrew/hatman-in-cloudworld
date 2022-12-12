@@ -12,6 +12,7 @@
 
     ; Levels
     .include "includes/levels/0_titlescreen.inc"
+    .include "includes/levels/between.inc"
     .include "includes/levels/1_level.inc"
     .include "includes/levels/2_level.inc"
     
@@ -115,7 +116,6 @@
             ldy #>music_data_titlescreen
             jsr famistudio_init
         :
-        cmp #2
         cmp #1
         bne :+
             ;SetPointer DrawTextPtr, NoText
@@ -129,6 +129,16 @@
             jsr famistudio_init
         :
         cmp #2
+        bne :+
+            SetPointer BackgroundPtr, Between_BackgroundData
+            SetPointer LevelActorDataPointer, Between_ActorData
+            SetPointer PalettePointer, Between_PaletteData
+            lda #1
+            ldx #<music_data_titlescreen
+            ldy #>music_data_titlescreen
+            jsr famistudio_init
+        :
+        cmp #3
         bne :+
             ;SetPointer DrawTextPtr, NoText
            ; SetPointer DrawTextPosPtr, $2020
