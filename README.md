@@ -60,7 +60,7 @@ Special shout-out to [Gustavo Pezzi](https://github.com/gustavopezzi) - his cour
 Another special shout-out to the [Famistudio](https://github.com/BleuBleu/FamiStudio) team. Not only did I write the music and create the sound effects in their Famistudio GUI app, the sound in-game is played by the Famistudio engine for ca65 aseembly. I did not write the sound code, I used theirs and it is *excellent.* Big props to those folks for their fantastic work.
 
 ## Learning from this Repo
-In the `snippets` directory you'll find a bunch of sequentially-numbered assembly files that aren't part of the game. These are the files I wrote as I was learning, step by step. They go through things like basic boot up, talking to the PPU, implementing controls, basic gravity, etc. If you were interested in learning those my be good simple resources to have a look at to see basic concepts in action without a lot of extra stuff going on.
+In the `snippets` directory you'll find a bunch of sequentially-numbered assembly files that aren't part of the game. These are the files I wrote as I was learning, step by step. They go through things like basic boot up, talking to the PPU, implementing controls, basic gravity, etc. If you were interested in learning, those may be good simple resources to have a look at to see basic concepts in action without a lot of extra stuff going on.
 
 ## Project Layout
 * `audio/` is where the music and sound FX files are stored. These were created in Famistudio and rendered to byte stream that are included into the program ROM
@@ -72,3 +72,4 @@ In the `snippets` directory you'll find a bunch of sequentially-numbered assembl
 * `levels/` - this is where the level definition metadata is stored. Each level is basically a map file (an NES nametable), a list of actors and their properties at level start, and a palette. When levels change the background, palette, and actor list pointers are updated and everything is bootstrapped
 * `lib/` - This is where the [Famistudio Sound Engine](https://github.com/BleuBleu/FamiStudio) is stored. I did not write the code! There's no like package or lib manager for NES dev so I don't have any way to include this except to just put it in the repo. I do not own the copyright to this code. However, it is MIT licensed I am pretty sure it is OK for me to include it directly. If its not I'm happy to change things. Big respect to the Famistudio team!
 * `maps/` - The nametables. These are the "screens" in the game like the levels, between level screens, title screen, etc. These were created in NEXXT
+* `main.asm` - The entry point and outermost main logic. Inits the NES, gets everything set up, and starts the Draw / Logic cycle.
