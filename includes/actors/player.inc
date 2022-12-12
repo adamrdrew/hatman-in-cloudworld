@@ -154,6 +154,7 @@
     lda_CollidingActor Actor::type
     cmp #ActorType::COIN
     bne Exit
+        inc Coins
         jsr Actor_DeleteCollidingActor
     Exit:
         rts

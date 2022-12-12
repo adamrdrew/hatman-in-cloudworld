@@ -8,7 +8,7 @@ LevelOne_BackgroundData:
 
 LevelOne_ActorData:
     ; First byte of actor data is always actor count
-    .byte 13
+    .byte 11
     ;      ActorType    xPos    yPos    FacingRight     hitpoints   col point   oam byte count (4 per tile)
     ;Player
     .byte   $08,        3,    20,    $01,            $03,        $08,        $10
@@ -25,9 +25,9 @@ LevelOne_ActorData:
 
     ; Coins
     .byte   $03,        3,    10,    $01,            $FF,        $04,        $04
-    .byte   $03,        4,    10,    $01,            $FF,        $04,        $04
-    .byte   $03,        3,    11,    $01,            $FF,        $04,        $04
-    .byte   $03,        4,    11,    $01,            $FF,        $04,        $04
+    .byte   $03,        4,    17,    $01,            $FF,        $04,        $04
+    .byte   $03,        27,    10,    $01,            $FF,        $04,        $04
+    .byte   $03,        27,    17,    $01,            $FF,        $04,        $04
 
     .byte   $03,        27,    10,    $01,            $FF,        $04,        $04
     .byte   $03,        28,    10,    $01,            $FF,        $04,        $04

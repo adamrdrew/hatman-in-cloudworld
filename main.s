@@ -2,6 +2,7 @@
 
 .include "includes/variables.inc"
 
+
 .segment "CODE"
     .include "includes/constants.inc"
     .include "includes/init.inc"
@@ -10,6 +11,10 @@
     .include "includes/actors/actors.inc"
 
     .include "includes/levels/1_level.inc"
+    .include "includes/levels/2_level.inc"
+    .include "lib/famistudio.s"
+    .include "audio/song1.s"
+    .include "audio/song2.s"
 
     .proc DrawSprites
         ; Copy sprite data to OAM
@@ -85,30 +90,38 @@
         rts 
     .endproc
 
-    ; Code of PRG ROM
-    Reset:
-        INIT_NES
-        INIT_VARIABLES
-
-    PaintBackround:
+    .proc LoadLevel
+        ldx #0
+        stx $2000       ; Disable NMI
+        stx $2001       ; Disable rendering
+        stx $4010       ; Disable DMC IRQs
+        bit PPU_STATUS       ; Clear the VBlank flag as we don't know its state on boot
+        lda Level
+        cmp #1
+        bne :+
+            SetPointer BackgroundPtr, LevelOne_BackgroundData
+            SetPointer LevelActorDataPointer, LevelOne_ActorData
+            lda #1
+            ldx #<music_data_song_1
+            ldy #>music_data_song_1
+            jsr famistudio_init
+        :
+        cmp #2
+        bne :+
+            SetPointer BackgroundPtr, LevelTwo_BackgroundData
+            SetPointer LevelActorDataPointer, LevelTwo_ActorData
+            lda #1
+            ldx #<music_data_song_2
+            ldy #>music_data_song_2
+            jsr famistudio_init
+        :
+        jsr Actor_ClearAll
+        jsr Actor_ClearOAMCache
         jsr LoadPalettes
         jsr LoadNametable
-
-        ; TODO: This should be factored out into start of level code or something
-        ; jsr Player_LoadSpriteData
-        SetPointer LevelActorDataPointer, LevelOne_ActorData
         jsr Actor_LoadLevelActorData
         jsr Actor_LoadSpriteData
 
-        SetPointer DrawTextPtr, TextMessage
-        SetPointer DrawTextPosPtr, $2020
-        jsr ShowText
-
-        SetPointer DrawTextPtr, FromAdamMessage
-        SetPointer DrawTextPosPtr, $2060
-        jsr ShowText
-
-        ;Enable PPU Rendering
         lda #%10010000  ; Enable NMI interrupts from PPU. Set BG to use 2nd pattern table
         sta PPU_CTRL
         ; Disable PPU Scrolling. This is customary to do when drawing to prevent errant scrolling
@@ -119,11 +132,29 @@
         lda #%00011110
         sta PPU_MASK    ; Setting the mask ensures we show the background
 
+        lda #0
+        jsr famistudio_music_play
+
+        rts
+    .endproc
+
+    ; Code of PRG ROM
+    Reset:
+        INIT_NES
+        INIT_VARIABLES
+  
+        lda #1
+        sta Level
+        jsr LoadLevel
+
+
+
     GameLoop:
         jsr Controller_ReadButtons
         jsr Controller_ButtonHandler
         jsr Actor_RunAll
         jsr Actor_CheckCollisions
+        
 
         WaitForVBlank:
             lda IsDrawComplete
@@ -132,17 +163,25 @@
         
         lda #FALSE
         sta IsDrawComplete
-
+        jsr famistudio_update
         jmp GameLoop
 
     NMI:
+        lda Coins
+        cmp #4
+        bne DontChangeLevel
+            lda #0
+            sta Coins
+            inc Level
+            jsr LoadLevel
+
+        DontChangeLevel:
         jsr DrawSprites
         ManageTime:
             inc Frame
             lda Frame
             cmp #60
             bne NotFrameSixty
-            inc Seconds
             lda #0
             sta Frame
             NotFrameSixty:
@@ -158,7 +197,7 @@
     TextMessage:
         .byte "LIVES 03", $0
     FromAdamMessage:
-        .byte "SCORE 0000", $0
+        .byte "SCORE ", $0
 
     ASCIITable:
         ; Position is ASCII Code. Value at position is Tile ID

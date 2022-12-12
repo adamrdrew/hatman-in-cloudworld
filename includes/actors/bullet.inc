@@ -172,12 +172,14 @@
     lda_CollidingActor Actor::type
     cmp #ActorType::CRAWLER
     bne :+
+        inc Score
         jsr Actor_ExplosionNew
         jsr Actor_DeleteCurrentActor
         jsr Actor_DeleteCollidingActor
     :
     cmp #ActorType::WALKER
     bne :+
+        inc Score
         jsr Actor_ExplosionNew
         jsr Actor_DeleteCurrentActor
         jsr Actor_DeleteCollidingActor

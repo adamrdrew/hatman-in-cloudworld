@@ -9,6 +9,7 @@ Hearts: .res 1
 Keys: .res 1
 Lives: .res 1
 Level: .res 1
+Score: .res 1
 
 ; Used for random number generation
 Seed: .res 2

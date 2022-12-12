@@ -66,7 +66,6 @@ WaitSecondVBlank:
     sta BackgroundPtr
     sta BackgroundPtr+1
     ; Set background pointer
-    SetPointer BackgroundPtr, LevelOne_BackgroundData
     lda #STATE_IDLE
     sta PlayerState
     lda #TRUE
