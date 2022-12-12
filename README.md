@@ -1,6 +1,10 @@
 # Hatman in Cloudworld
 
-A simple sing-screen platformer for the NES written in 6502 Assembly! This was a project I did for Hackathon Dec 22 @ Red Hat. It was a ton of fun and I learned a lot.
+![Game Screenshot](.github/hatman.png "a title")
+
+A simple single-screen platformer for the NES written in 6502 Assembly! This was a project I did for Hackathon Dec 22 @ Red Hat. It was a ton of fun and I learned a lot.
+
+This is a work in progress. I do hope to finish the game eventually, but right now its only a couple of levels. It is also just barely within the vblank timing budget so it needs a lot of slimming down.
 
 ## Requirements
 You'll need the following:
@@ -23,6 +27,9 @@ $ make run-fceux
 
 And it will build and run in your emulator.
 
+## Hacking and Developing
+This is Free Software so please feel free to fork and patches are very much welcome :) For development I *highly* recommend using the Messen emulator. Its debugger is fantastic and it really helps with tracking stuff down. Our make targets build with debug symbols so it makes things really nice to debug in Messen.
+
 ## Resources Consulted
 I went from never having done any NES development before to a decent chunk of a game in a week, thanks to these awesome resources:
 
@@ -37,3 +44,5 @@ I went from never having done any NES development before to a decent chunk of a 
 * [This made me completely insane for an hour](https://yeahexp.com/why-in-mos-6502-does-the-sbc-subtract-2-instead-of-1-the-first-time/)
 * [Middle Engine NES Programming Guide](https://www.middle-engine.com/blog/posts/2020/06/23/programming-the-nes-the-6502-in-detail)
 * [6502 Division Algos](https://mdfs.net/Info/Comp/6502/ProgTips/6502Divide)
+
+Special shout-out to [Gustavo Pezzi](https://github.com/gustavopezzi) - his course [NES Game Programming](https://courses.pikuma.com/courses/take/nes-game-programming-tutorial) was my roadmap and really got me off to a great start. Much of the work in this project (the Actor system for example) scales-up and builds-on his work. He put together a fantastic course and I recommend it highly to anyone who wants to learn NES development.
