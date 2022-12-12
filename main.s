@@ -140,8 +140,6 @@
         :
         cmp #3
         bne :+
-            ;SetPointer DrawTextPtr, NoText
-           ; SetPointer DrawTextPosPtr, $2020
             SetPointer BackgroundPtr, LevelTwo_BackgroundData
             SetPointer LevelActorDataPointer, LevelTwo_ActorData
             SetPointer PalettePointer, LevelTwo_PaletteData

@@ -1,6 +1,31 @@
 # Hatman in Cloudworld
 
+A simple sing-screen platformer for the NES written in 6502 Assembly! This was a project I did for Hackathon Dec 22 @ Red Hat. It was a ton of fun and I learned a lot.
+
+## Requirements
+You'll need the following:
+* The CA65 assmbler (part of the CC65 suite) that you can [Download Here](https://cc65.github.io/getting-started.html)
+* An NES emulator. I recommend either Messen or FCEUX.
+
+## Build
+If you have CA65 installed and on your path simply run:
+
+```bash
+$ make build
+```
+
+And a `.nes` file will be generated that you can run in your emulator. If you have Messen or FCEUX on your path you can run either of the following:
+
+```bash
+$ make run-messen
+$ make run-fceux
+```
+
+And it will build and run in your emulator.
+
 ## Resources Consulted
+I went from never having done any NES development before to a decent chunk of a game in a week, thanks to these awesome resources:
+
 * [NES Development Enviroment by NESHacker](https://www.youtube.com/watch?v=RtY5FV5TrIU)
 * [CA65 Macro Assembler Language Support for VSCode](https://github.com/tlgkccampbell/code-ca65)
 * [NESHacker's Demo Project](https://github.com/NesHacker/DevEnvironmentDemo)
