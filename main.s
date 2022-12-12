@@ -18,6 +18,7 @@
     ; Audio
     .include "lib/famistudio.s"
     .include "audio/sfx.s"
+    .include "audio/titlescreen.s"
     .include "audio/song1.s"
     .include "audio/song2.s"
 
@@ -108,8 +109,8 @@
             SetPointer LevelActorDataPointer, TitleScreen_ActorData
             SetPointer PalettePointer, TitleScreen_PaletteData
             lda #1
-            ldx #<music_data_song_1
-            ldy #>music_data_song_1
+            ldx #<music_data_titlescreen
+            ldy #>music_data_titlescreen
             jsr famistudio_init
         :
         cmp #2
