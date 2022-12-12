@@ -25,6 +25,8 @@ Seconds: .res 1         ; Reserve 1 butes to store the second counter, increment
 BackgroundPtr: .res 2   ; Reserve 2 bytes for a pointer to a background array
 BGDrawPointer: .res 2   ; Reserve 2 bytes for the pointer we use to iterate through while drawing
 
+PalettePointer: .res 2
+
 DrawTextPtr: .res 2         ; Reserve 2 bytes for the text we are going to draw
 DrawTextAsciiCode: .res 1   ; Reserve one byte for the ascii code we are going to look up to convert to a tile ID
 DrawTextPosPtr: .res 2      ; Reserve 2 bytes for the pointer to where in tile space we are going to draw the tiles for the text

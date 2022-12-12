@@ -11,6 +11,7 @@
     .include "includes/actors/actors.inc"
 
     ; Levels
+    .include "includes/levels/0_titlescreen.inc"
     .include "includes/levels/1_level.inc"
     .include "includes/levels/2_level.inc"
     
@@ -61,9 +62,9 @@
         bit PPU_STATUS
         ReadPaletteBytes:
             ; x = PaletteData[y]
-           ldx LevelOne_PaletteData,y
+           lda (PalettePointer),y
            ; ppu_data_write(x)
-           stx PPU_DATA
+           sta PPU_DATA
            iny ; i++
            cpy #32 ; if y == 32
            ; break
@@ -101,10 +102,22 @@
         stx $4010       ; Disable DMC IRQs
         bit PPU_STATUS       ; Clear the VBlank flag as we don't know its state on boot
         lda Level
+        cmp #0
+        bne :+
+            SetPointer BackgroundPtr, TitleScreen_BackgroundData
+            SetPointer LevelActorDataPointer, TitleScreen_ActorData
+            SetPointer PalettePointer, TitleScreen_PaletteData
+            lda #1
+            ldx #<music_data_song_1
+            ldy #>music_data_song_1
+            jsr famistudio_init
+        :
+        cmp #2
         cmp #1
         bne :+
             SetPointer BackgroundPtr, LevelOne_BackgroundData
             SetPointer LevelActorDataPointer, LevelOne_ActorData
+            SetPointer PalettePointer, LevelOne_PaletteData
             lda #1
             ldx #<music_data_song_1
             ldy #>music_data_song_1
@@ -114,6 +127,7 @@
         bne :+
             SetPointer BackgroundPtr, LevelTwo_BackgroundData
             SetPointer LevelActorDataPointer, LevelTwo_ActorData
+            SetPointer PalettePointer, LevelTwo_PaletteData
             lda #1
             ldx #<music_data_song_2
             ldy #>music_data_song_2
@@ -152,7 +166,7 @@
         ldy #>sounds
         jsr famistudio_sfx_init
 
-        lda #1
+        lda #0
         sta Level
         jsr LoadLevel
 

@@ -14,6 +14,7 @@ MAX_ACTORS = 16
     WALKER      = 7
     PLAYER      = 8
     EXPLOSION   = 9
+    START_BUTTON = 10
 .endenum
 
 .struct Actor
@@ -39,6 +40,7 @@ MAX_ACTORS = 16
 .include "walker.inc"
 .include "player.inc"
 .include "explosion.inc"
+.include "startbutton.inc"
 
 .proc Actor_CheckCollisionPoint
     lda #0
@@ -393,6 +395,11 @@ MAX_ACTORS = 16
             cmp #ActorType::EXPLOSION
             bne :+
                 jsr Actor_Explosion_Logic
+                jmp NextActor
+            :
+            cmp #ActorType::START_BUTTON
+            bne :+
+                jsr Actor_StartButton_Logic
                 jmp NextActor
             :
         NextActor:
