@@ -105,6 +105,8 @@
         lda Level
         cmp #0
         bne :+
+           ; SetPointer DrawTextPtr, NoText
+           ; SetPointer DrawTextPosPtr, $2020
             SetPointer BackgroundPtr, TitleScreen_BackgroundData
             SetPointer LevelActorDataPointer, TitleScreen_ActorData
             SetPointer PalettePointer, TitleScreen_PaletteData
@@ -116,6 +118,8 @@
         cmp #2
         cmp #1
         bne :+
+            ;SetPointer DrawTextPtr, NoText
+           ; SetPointer DrawTextPosPtr, $2020
             SetPointer BackgroundPtr, LevelOne_BackgroundData
             SetPointer LevelActorDataPointer, LevelOne_ActorData
             SetPointer PalettePointer, LevelOne_PaletteData
@@ -126,6 +130,8 @@
         :
         cmp #2
         bne :+
+            ;SetPointer DrawTextPtr, NoText
+           ; SetPointer DrawTextPosPtr, $2020
             SetPointer BackgroundPtr, LevelTwo_BackgroundData
             SetPointer LevelActorDataPointer, LevelTwo_ActorData
             SetPointer PalettePointer, LevelTwo_PaletteData
@@ -140,6 +146,10 @@
         jsr LoadNametable
         jsr Actor_LoadLevelActorData
         jsr Actor_LoadSpriteData
+
+
+        ;jsr ShowText
+
 
         lda #%10010000  ; Enable NMI interrupts from PPU. Set BG to use 2nd pattern table
         sta PPU_CTRL
@@ -217,7 +227,8 @@
     IRQ:
         rti ; Return from Interrupt
 
-        
+    NoText:
+        .byte $0
     TextMessage:
         .byte "LIVES 03", $0
     FromAdamMessage:
