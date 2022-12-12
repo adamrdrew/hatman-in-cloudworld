@@ -209,29 +209,46 @@
         jmp GameLoop
 
     NMI:
+        ; This tripped me up for a while
+        ; We can get our registers clobb
+        NMI_CacheRegisters
         lda Coins
         cmp #4
-        bne DontChangeLevel
+        bne :+
             lda #0
             sta Coins
+            sta Frame
             inc Level
             jsr LoadLevel
+            NMI_FetchCachedRegisters
+            ; We bail after drawing the tiles because I'm not sure we have enough time
+            ; to also draw the sprites. Probably, but why risk it. Full screen draws only
+            ; happen at level transitions, so why not. That said we don't set the isDrawComplete
+            ; flag because we don't want anything to happen for 1 frame
+            rti
+        :
 
-        DontChangeLevel:
+        ; This is our main draw code
+        ; In our game all we draw are sprites, which
+        ; is handled by a DMA copy from our OAM_COPY 
+        ; to OAM on the PPU. We don't scroll or mess with tiles
+        ; so this is really it (except for text which we need to add)
         jsr DrawSprites
         ManageTime:
             inc Frame
             lda Frame
             cmp #60
-            bne NotFrameSixty
-            lda #0
-            sta Frame
-            NotFrameSixty:
+            bne :+
+                lda #0
+                sta Frame
+            :
 
-        lda #TRUE
-        inc IsDrawComplete
-
+        SkipDraw:
+            lda #TRUE
+            inc IsDrawComplete
+            NMI_FetchCachedRegisters
         rti ; Return from Interrupt
+    
     IRQ:
         rti ; Return from Interrupt
 
@@ -257,6 +274,41 @@
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
         .byte $00,$00,$00, $00,$00,$00, $00,$00,$00, $00,$00,$00
+
+    PixelToTileLookupTable:
+        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+        .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+        .byte $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
+        .byte $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
+        .byte $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
+        .byte $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05
+        .byte $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06
+        .byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+        .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+        .byte $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09
+        .byte $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+        .byte $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B
+        .byte $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C
+        .byte $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D
+        .byte $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E
+        .byte $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F
+        .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+        
+        .byte $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11, $11
+        .byte $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12, $12
+        .byte $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13, $13
+        .byte $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14, $14
+        .byte $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15, $15
+        .byte $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16, $16
+        .byte $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17, $17
+        .byte $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18, $18
+        .byte $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19, $19
+        .byte $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A
+        .byte $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B
+        .byte $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C
+        .byte $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D
+        .byte $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E
+        .byte $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F
 
 
 ;Load CHAR_ROM pattern tables

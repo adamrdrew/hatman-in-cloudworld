@@ -1,12 +1,8 @@
 .segment "ZEROPAGE"
 
-; We reserve this byte to use during debugging
-; It is the first byte in memory so it is easy to find and watch
 DebugByte: .res 1
 
 Coins: .res 1
-Hearts: .res 1
-Keys: .res 1
 Lives: .res 1
 Level: .res 1
 Score: .res 1
@@ -20,7 +16,6 @@ TileLookupPointerDebug: .res 2
 
 Buttons: .res 1         ; Reserve one by to represent button state (a,b,sel,sta,u,d,l,r)
 Frame:   .res 1         ; Reserve 1 byte to store the framecounter
-Seconds: .res 1         ; Reserve 1 butes to store the second counter, increments every 60 frames
 
 BackgroundPtr: .res 2   ; Reserve 2 bytes for a pointer to a background array
 BGDrawPointer: .res 2   ; Reserve 2 bytes for the pointer we use to iterate through while drawing
@@ -116,6 +111,16 @@ LevelActorDataPointer:  .res 2
 RegisterCacheX: .res 1
 RegisterCacheY: .res 1
 RegisterCacheA: .res 1
+
+; We have a second register cache for the NMI
+; NMI is like the Kool Aide Man - it just barges in 
+; so we need to have a special register cache because
+; what if it barged in when another part of code already had 
+; a register cache?
+NMIRegisterCacheX: .res 1
+NMIRegisterCacheY: .res 1
+NMIRegisterCacheA: .res 1
+
 
 ; This variable is used by the macros that help make reading and writing to
 ; the actor structs indirected by pointers easier
