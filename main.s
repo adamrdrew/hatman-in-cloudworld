@@ -88,7 +88,7 @@
                 lda (BGDrawPointer), y ; Read value from address BGDrawPointer + y
                 sta PPU_DATA
                 iny 
-                cpy #255 ; Keep iterating until we've read all 55 bytes in the chunk
+                cpy #255 ; Keep iterating until we've read all 255 bytes in the chunk
                 bne ReadBytesInChunk
             inc BGDrawPointer+1 ;Increate the hi-byte in the pointer address by one, which will increase our offset by 255
             inx ; increase x
@@ -209,29 +209,46 @@
         jmp GameLoop
 
     NMI:
+        ; This tripped me up for a while
+        ; We can get our registers clobb
+        NMI_CacheRegisters
         lda Coins
         cmp #4
-        bne DontChangeLevel
+        bne :+
             lda #0
             sta Coins
+            sta Frame
             inc Level
             jsr LoadLevel
+            NMI_FetchCachedRegisters
+            ; We bail after drawing the tiles because I'm not sure we have enough time
+            ; to also draw the sprites. Probably, but why risk it. Full screen draws only
+            ; happen at level transitions, so why not. That said we don't set the isDrawComplete
+            ; flag because we don't want anything to happen for 1 frame
+            rti
+        :
 
-        DontChangeLevel:
+        ; This is our main draw code
+        ; In our game all we draw are sprites, which
+        ; is handled by a DMA copy from our OAM_COPY 
+        ; to OAM on the PPU. We don't scroll or mess with tiles
+        ; so this is really it (except for text which we need to add)
         jsr DrawSprites
         ManageTime:
             inc Frame
             lda Frame
             cmp #60
-            bne NotFrameSixty
-            lda #0
-            sta Frame
-            NotFrameSixty:
+            bne :+
+                lda #0
+                sta Frame
+            :
 
-        lda #TRUE
-        inc IsDrawComplete
-
+        SkipDraw:
+            lda #TRUE
+            inc IsDrawComplete
+            NMI_FetchCachedRegisters
         rti ; Return from Interrupt
+    
     IRQ:
         rti ; Return from Interrupt
 

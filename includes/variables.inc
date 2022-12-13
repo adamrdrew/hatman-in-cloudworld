@@ -1,12 +1,8 @@
 .segment "ZEROPAGE"
 
-; We reserve this byte to use during debugging
-; It is the first byte in memory so it is easy to find and watch
 DebugByte: .res 1
 
 Coins: .res 1
-Hearts: .res 1
-Keys: .res 1
 Lives: .res 1
 Level: .res 1
 Score: .res 1
@@ -14,13 +10,8 @@ Score: .res 1
 ; Used for random number generation
 Seed: .res 2
 
-TileLookupPointer: .res 2
-TileLookupPointerDebug: .res 2
-
-
 Buttons: .res 1         ; Reserve one by to represent button state (a,b,sel,sta,u,d,l,r)
 Frame:   .res 1         ; Reserve 1 byte to store the framecounter
-Seconds: .res 1         ; Reserve 1 butes to store the second counter, increments every 60 frames
 
 BackgroundPtr: .res 2   ; Reserve 2 bytes for a pointer to a background array
 BGDrawPointer: .res 2   ; Reserve 2 bytes for the pointer we use to iterate through while drawing
@@ -72,23 +63,19 @@ PlayerYPos: .res 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Tile Collision Variables
-;; These variables are private to the actor collision code
+;; These variables are all used in the Actor_TestTileCollision proc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; These two variables define the point that the player is going to check for a tile in pixel space
-ActorXCollisionPoint: .res 1
-ActorYCollisionPoint: .res 1
-; These two are the previous two but recast into tile space. 
-ActorXCollisionTileX: .res 1
-ActorYCollisionTileY: .res 1
-; This is the pointer that is used to hold the position into the tile map that we
-; are searching at. Because the tile map is longer than an 8 bit number can hold
-; we have to search in batches. We use this variable to hold a pointer to our 
-; current position
-; TileLookupPointer: .res 2
-; These coordinates are used when searching through the tile data array
-TileCollisionLookupXOffset: .res 1
-TileCollisionLookupYOffset: .res 1
+TileCollision_PixelSpaceX: .res 1
+TileCollision_PixelSpaceY: .res 1
+
+TileCollision_TileSpaceX: .res 1
+TileCollision_TileSpaceY: .res 1
+
+TileCollision_PixelOffsetX: .res 1
+TileCollision_PixelOffsetY: .res 1
+
+TileCollision_NametablePointer: .res 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Set to TRUE at the end of PPU NMI
@@ -116,6 +103,16 @@ LevelActorDataPointer:  .res 2
 RegisterCacheX: .res 1
 RegisterCacheY: .res 1
 RegisterCacheA: .res 1
+
+; We have a second register cache for the NMI
+; NMI is like the Kool Aide Man - it just barges in 
+; so we need to have a special register cache because
+; what if it barged in when another part of code already had 
+; a register cache?
+NMIRegisterCacheX: .res 1
+NMIRegisterCacheY: .res 1
+NMIRegisterCacheA: .res 1
+
 
 ; This variable is used by the macros that help make reading and writing to
 ; the actor structs indirected by pointers easier

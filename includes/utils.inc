@@ -42,6 +42,18 @@
         lda RegisterCacheA
 .endmacro
 
+.macro NMI_CacheRegisters
+        stx NMIRegisterCacheX
+        sty NMIRegisterCacheY
+        sta NMIRegisterCacheA
+.endmacro
+
+.macro NMI_FetchCachedRegisters
+        ldx NMIRegisterCacheX
+        ldy NMIRegisterCacheY
+        lda NMIRegisterCacheA
+.endmacro
+
 ; I took this from the NES Game Programming Tutorial couse on Pikuma
 ; I don not understand this code at all but the course instructor says it
 ; is a '16-bit Galois linear feedback shift register with polynomial $039'

@@ -2,72 +2,171 @@
 ; A collection of functions that all Actors can use at run time to do things
 ; like movement and collisions
 ;
-; 
+ 
+; This table maps a pixel to the tile that would contain it
+; there are 32 possible pixel values here, meaning it is usable 
+; for either horixontal (32 wide) or vertical (30 tall) dimensions
+; Simply look at the offset in the table that matches your pixel
+; and read the value and that will be the tile ID.
+; For example
+PixelSpaceToTileSpaceLookupTable:
+.byte $00, $00, $00, $00, $00, $00, $00, $00    
+.byte $01, $01, $01, $01, $01, $01, $01, $01    
+.byte $02, $02, $02, $02, $02, $02, $02, $02
+.byte $03, $03, $03, $03, $03, $03, $03, $03
+.byte $04, $04, $04, $04, $04, $04, $04, $04
+.byte $05, $05, $05, $05, $05, $05, $05, $05
+.byte $06, $06, $06, $06, $06, $06, $06, $06
+.byte $07, $07, $07, $07, $07, $07, $07, $07
+.byte $08, $08, $08, $08, $08, $08, $08, $08
+.byte $09, $09, $09, $09, $09, $09, $09, $09
+.byte $0A, $0A, $0A, $0A, $0A, $0A, $0A, $0A
+.byte $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B
+.byte $0C, $0C, $0C, $0C, $0C, $0C, $0C, $0C
+.byte $0D, $0D, $0D, $0D, $0D, $0D, $0D, $0D
+.byte $0E, $0E, $0E, $0E, $0E, $0E, $0E, $0E
+.byte $0F, $0F, $0F, $0F, $0F, $0F, $0F, $0F
+.byte $10, $10, $10, $10, $10, $10, $10, $10
+.byte $11, $11, $11, $11, $11, $11, $11, $11
+.byte $12, $12, $12, $12, $12, $12, $12, $12
+.byte $13, $13, $13, $13, $13, $13, $13, $13  
+.byte $14, $14, $14, $14, $14, $14, $14, $14
+.byte $15, $15, $15, $15, $15, $15, $15, $15
+.byte $16, $16, $16, $16, $16, $16, $16, $16
+.byte $17, $17, $17, $17, $17, $17, $17, $17
+.byte $18, $18, $18, $18, $18, $18, $18, $18
+.byte $19, $19, $19, $19, $19, $19, $19, $19
+.byte $1A, $1A, $1A, $1A, $1A, $1A, $1A, $1A
+.byte $1B, $1B, $1B, $1B, $1B, $1B, $1B, $1B
+.byte $1C, $1C, $1C, $1C, $1C, $1C, $1C, $1C
+.byte $1D, $1D, $1D, $1D, $1D, $1D, $1D, $1D
+.byte $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E
+.byte $1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F
+.byte $20, $20, $20, $20, $20, $20, $20, $20
 
+TileCollisionYLoBytes:
+.byte $00, $20, $40, $60, $80, $A0, $C0, $E0
+.byte $00, $20, $40, $60, $80, $A0, $C0, $E0
+.byte $00, $20, $40, $60, $80, $A0, $C0, $E0
+.byte $00, $20, $40, $60, $80, $A0, $C0, $E0
 
+TileCollisionYHiBytes:
+.byte $00, $00, $00, $00,  $00, $00, $00, $00
+.byte $01, $01, $01, $01,  $01, $01, $01, $01
+.byte $02, $02, $02, $02,  $02, $02, $02, $02
+.byte $03, $03, $03, $03,  $03, $03, $03, $03
+
+; This is the actor to tile collision checking code 
+; it is well documented because it is tricky and I don't want to 
+; forget how it works!
+;
+; args:
 ; X must be set to the x offset to check in pixels
 ; Y must be set to the y offset to check in pixels
 ; result will be placed into A as 1 or 0 
 .proc Actor_TestTileCollision
-        stx TileCollisionLookupXOffset      ; The x offset from ActorX where we'll look for a tile
-        sty TileCollisionLookupYOffset      ; The y offset from ActorY where we'll look for a tile
+        ; How many pixels away from the Actor's x and y we want to check for a collision at
+        stx TileCollision_PixelOffsetX      
+        sty TileCollision_PixelOffsetY      
 
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;; Get coords in pixel-space we'll look for collision
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;ldx #03
-        lda_CurrentActor Actor::xPos                     ; Get the actor's X coord. This will be the 3rd byte in from OAM_COPY
+
+        ; Our first step is to add the pixel offsets to the Actor's x and y so we have the 
+        ; coordinates that we want to check for the collision at 
+        lda_CurrentActor Actor::xPos                
         clc
-        adc TileCollisionLookupXOffset      ; Add the offset to the actor's X coord
-        sta ActorXCollisionPoint           ; Store it in a variable
+        ; Add the Actor::xPos to the offset
+        adc TileCollision_PixelOffsetX
+        ; X coordinate in pixel space we want to check for a tile collision
+        sta TileCollision_PixelSpaceX         
 
-        lda_CurrentActor Actor::yPos                         ; We do the same thing here for Y
-        clc                                 ; Only difference is actor Y is first byte in OAM_COPY
-        adc TileCollisionLookupYOffset
-        sta ActorYCollisionPoint
+        lda_CurrentActor Actor::yPos
+        clc
+        ; Add the Actor::yPos to the offset                           
+        adc TileCollision_PixelOffsetY
+        ; Y coordinate in pixel space we want to check for a tile collision
+        sta TileCollision_PixelSpaceY
 
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;; Convert pixel-space coords to tilemap coords
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        lda ActorXCollisionPoint           ; X coord in pixel space we want to check for collision
-        lsr                                 ; logical shift 3 times to divide by 32
-        lsr                                 ; We divide by 32 because there are 32 tiles per row
-        lsr
-        sta ActorXCollisionTileX           ; Store our tilemap-space x coord
 
-        lda ActorYCollisionPoint           ; Do exactly the same thing for y
-        lsr                                 ; We cheat a little because there are only 30 rows 
-        lsr                                 ; but 32 will still give us the right answer
-        lsr
-        sta ActorYCollisionTileY
+        ; Our next step is to convert the pixel space coordinates to tile space coordinates
+        ; this is done via a lookup table to save time
+        ; The screen is 224x220 pixels, 32x30 tiles, with 8x8 pixels per tile
+        ; Offsets into the table represent pixels. So if your pixel is 110 you look
+        ; 110 bytes into the table. The value you read at that offset is the tile coordinate that
+        ; corresponds to that pixel.
+        ; So tile coordinate TileN = PixelToTileLookupTable, PixelN
 
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;; Find the memory address of the row that the tile we're looking for is in
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ldy #0                                          ; We're going to count up from 0 to ActorYCollisionTileY
-        CopyPointer BackgroundPtr, TileLookupPointer    ; Make a copy of the global Background Pointer
-        FindYOffset:
-            cpy ActorYCollisionTileY
-            beq ExitLoop                                ; If we've reached ActorYCollisionTileY exit the loop
-            lda TileLookupPointer                       ; Store the lo bit of the tile address for our pointer
-            clc                                         
-            adc #32                                     ; Add 32 bytes to the pointer address to get the address of the next row
-            sta TileLookupPointer
-            lda TileLookupPointer+1                     ; We we need to handle carrying by adding 0 to the hi-byte 
-            adc #0                                      ; of the pointer address. Notice we don't clear carry
-            sta TileLookupPointer+1                     ; This will ensure our hi-byte handle the lo-byte increment correctly
-            iny                                         ; Incremenet our iterator and move to the next iteration
-            jmp FindYOffset
-        ExitLoop:
+        ; Take the y position in pixel space
+        ldy TileCollision_PixelSpaceY
+        ; Find TileY = PixelToTileLookupTable, PixelY
+        lda PixelSpaceToTileSpaceLookupTable, y
+        ; Store the tile space Y coordinate for the pixel
+        sta TileCollision_TileSpaceY
+
+        ; Do the same thing for X
+        ldy TileCollision_PixelSpaceX
+        ; TileX = PixelToTileLookupTable, PixelX
+        lda PixelSpaceToTileSpaceLookupTable, y
+        ; Store the tile space X coordinate for the pixel
+        sta TileCollision_TileSpaceX
+
+        ; Our final task to to use our tile space coordinates to look into the nametable
+        ; and find the tile that resides there, so we can determine if it has collision
+        ; properties
         
-        ldy ActorXCollisionTileX                       ; Store the tile X to use as an offset. 
-        lda (TileLookupPointer), y                      ; Get the byte that represents our tile                
-        cmp #$E0                                        ; We want to know if the tile ID is >= $E0
-        bcc Exit                                        ; We treat all tiles >= $E0 as solid
-            lda #1                                      ; It is, so return TRUE
+        ; First grab a copy of the background pointer. We do this because we are 
+        ; going to mutate the pointer address to find our colliding tile, so
+        ; we want to work on a copy
+        CopyPointer BackgroundPtr, TileCollision_NametablePointer
+        
+        ; The problem we face here is that the nametable is 930 bytes, so
+        ; we can't simply multiply TileSpace_X x TileSpace_Y and get the offset
+        ; as the result wouldn't fit in a 8 bit value. However, we can get tricky
+        ; and do 16 bit math with the help of 2 more lookup tables in order to
+        ; change the address the pointer is pointing to from the start of the 
+        ; nametable to our colliding tile
+
+        ; Grab our tilespace Y coordinate
+        ; This represents what row we are on in the nametable
+        ; each row contains 32 tiles
+        ; meaning each row represents an offset of TileSpace Y * 32
+        ; Y pos 20 for example would be offset 20 * 32 = 640
+        ; But we can't store 640 in a byte!
+        ; True, but we can perform 16 bit math if we do it in 2 steps
+        ;   1. Add multiples of 255 to the high byte
+        ;   2. Add multiples of 32 to the lo byte
+        ; For example, if we want to find the Y offset into the nametable for
+        ; Y (row) 20 we can find the pixel offset of 640 by doing the following
+        ;   1. Look up in TileCollisionYHiBytes, TileY and find out we need to add 2 x 255 or $02 to the hi byte
+        ;   2. Look up in TileCollisionYLoBytes, TileY and find out we need to add $80 or 128 to the low byte
+        ; The result means we add $0280 to the pointer ($80 to the lo byte and $02 to the high byte) to
+        ; achieve an offset by a 16 bit value!
+        ldy TileCollision_TileSpaceY 
+        clc
+        lda TileCollision_NametablePointer
+        ; Find our offset for multiples of 32 and move the pointer by that much
+        adc TileCollisionYLoBytes, y
+        sta TileCollision_NametablePointer
+
+        lda TileCollision_NametablePointer+1
+        adc #0
+        ; Find our offset for multiples of 255 and move our pointer by that much
+        adc TileCollisionYHiBytes, y
+        sta TileCollision_NametablePointer+1
+
+        ; OK, we have now moved our pointer into the nametable to the position of the start 
+        ; of the row the tile we want is on. Now we just need to add the tile x position to the pointer
+        ; to get the rest of the way. The X position just represents a simple 8 bit offset so no need for
+        ; lookups
+        ldy TileCollision_TileSpaceX
+        ; The value we find at this offset will be thhe ID of the tile at that spot in the nametable
+        lda (TileCollision_NametablePointer), y               
+        ; In this game we treat any tile with an Id higher that $E0 as solid.                    
+        cmp #$E0                                        
+        bcc Exit                                        
+            lda #1                                      
             rts
         Exit:
-        lda #0                                          ; It isn't, so return false
+        lda #0                                          
         rts
 .endproc
 

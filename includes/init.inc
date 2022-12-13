@@ -62,7 +62,6 @@ WaitSecondVBlank:
 .macro INIT_VARIABLES
     lda #0
     sta Frame
-    sta Seconds
     sta BackgroundPtr
     sta BackgroundPtr+1
     ; Set background pointer
