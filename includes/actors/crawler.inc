@@ -1,11 +1,4 @@
 .proc Actor_CrawlerWalkAndForth
-    lda Frame
-    jsr GetRandomNumber
-    lsr
-    lsr
-    cmp #32
-    bcs Exit
-
     lda_CurrentActor Actor::isOnGround
     cmp #TRUE
     bne Exit
@@ -50,19 +43,44 @@
 .endproc
 
 .proc Actor_Crawler_Logic
+    lda_CurrentActor Actor::state
+    cmp #ActorStates::CREATING
+    bne :+
         lda #1
         sta_CurrentActor Actor::xSpeed
-
-        ; Because of the constant downward force of gravity we are always potentially
-        ; moving on the Y axis
+        lda #ActorStates::IDLE
+        sta_CurrentActor Actor::state
+        lda #FALSE
+        sta_CurrentActor Actor::isOnGround
+        jmp Exit
+    :
+    cmp #ActorStates::IDLE 
+    bne :+
         jsr Actor_HandleVerticalTileCollission
         jsr Actor_UpdateSpritePositionVertical
-
         jsr Actor_CrawlerWalkAndForth
-
+        jmp Exit
+    :
+    cmp #ActorStates::ATTACKING
+    bne :+
+        jmp Exit
+    :
+    cmp #ActorStates::TAKING_DAMAGE
+    bne :+
+        jmp Exit
+    :
+    cmp #ActorStates::DYING 
+    bne :+
+        jmp Exit
+    :
+    cmp #ActorStates::DELETING
+    bne :+
+        jmp Exit
+    :
+    
+    Exit:
         jsr Actor_Crawler_Draw
-
-    rts
+        rts
 .endproc
 
 .proc Actor_Crawler_Draw

@@ -1,7 +1,7 @@
 ; These are the actor type IDs that we use to 
 ; assign actors to their logic and what not
 
-MAX_ACTORS = 21
+MAX_ACTORS = 14
 
 .enum ActorType
     NULL            = $FF
@@ -18,7 +18,7 @@ MAX_ACTORS = 21
 .endenum
 
 .enum ActorStates
-    CREATING        = 0
+    CREATING        = $CA
     TAKING_DAMAGE   = 1
     IDLE            = 2
     DYING           = 3
@@ -302,6 +302,7 @@ MAX_ACTORS = 21
         sta NewActor+Actor::xSpeed
         sta NewActor+Actor::ySpeed
         sta NewActor+Actor::isOnGround
+        lda #ActorStates::CREATING
         sta NewActor+Actor::state
 
         iny
