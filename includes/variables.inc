@@ -10,10 +10,6 @@ Score: .res 1
 ; Used for random number generation
 Seed: .res 2
 
-TileLookupPointer: .res 2
-TileLookupPointerDebug: .res 2
-
-
 Buttons: .res 1         ; Reserve one by to represent button state (a,b,sel,sta,u,d,l,r)
 Frame:   .res 1         ; Reserve 1 byte to store the framecounter
 
@@ -70,20 +66,16 @@ PlayerYPos: .res 1
 ;; These variables are private to the actor collision code
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; These two variables define the point that the player is going to check for a tile in pixel space
-ActorXCollisionPoint: .res 1
-ActorYCollisionPoint: .res 1
-; These two are the previous two but recast into tile space. 
-ActorXCollisionTileX: .res 1
-ActorYCollisionTileY: .res 1
-; This is the pointer that is used to hold the position into the tile map that we
-; are searching at. Because the tile map is longer than an 8 bit number can hold
-; we have to search in batches. We use this variable to hold a pointer to our 
-; current position
-; TileLookupPointer: .res 2
-; These coordinates are used when searching through the tile data array
-TileCollisionLookupXOffset: .res 1
-TileCollisionLookupYOffset: .res 1
+TileCollision_PixelSpaceX: .res 1
+TileCollision_PixelSpaceY: .res 1
+
+TileCollision_TileSpaceX: .res 1
+TileCollision_TileSpaceY: .res 1
+
+TileCollision_PixelOffsetX: .res 1
+TileCollision_PixelOffsetY: .res 1
+
+TileCollision_NametablePointer: .res 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Set to TRUE at the end of PPU NMI
