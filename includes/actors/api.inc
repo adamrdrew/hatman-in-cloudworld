@@ -170,6 +170,29 @@ TileCollisionYHiBytes:
         rts
 .endproc
 
+.proc Actor_TakeDamageAndMaybeDie
+    lda_CollidingActor Actor::type
+    cmp #ActorType::BULLET
+    bne Exit
+        lda_CurrentActor Actor::hitpoints
+        sec
+        sbc #1
+        cmp #0
+        bne :+
+
+            jsr Actor_ExplosionNew
+            jsr Actor_DeleteCurrentActor
+            jsr Actor_DeleteCollidingActor
+            lda #02
+            ldx #FAMISTUDIO_SFX_CH3
+            jsr famistudio_sfx_play
+            rts
+        :
+        sta_CurrentActor Actor::hitpoints
+    Exit:
+    rts
+.endproc
+
 ; Called whenever the actor is moving horizontally
 ; We handle collission by point checking in front of us
 ; for a solid tile and then killing actor xSpeed if it exists

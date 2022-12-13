@@ -130,16 +130,8 @@
     rts
 .endproc
 
+
 .proc Actor_Walker_SpriteCollision
-    lda_CollidingActor Actor::type
-    cmp #ActorType::BULLET
-    bne Exit
-        jsr Actor_ExplosionNew
-        jsr Actor_DeleteCurrentActor
-        jsr Actor_DeleteCollidingActor
-        lda #02
-        ldx #FAMISTUDIO_SFX_CH3
-        jsr famistudio_sfx_play 
-    Exit:
-        rts
+    jsr Actor_TakeDamageAndMaybeDie
+    rts
 .endproc

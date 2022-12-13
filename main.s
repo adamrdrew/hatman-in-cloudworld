@@ -1,6 +1,7 @@
 .include "includes/header.inc"
 
 .include "includes/variables.inc"
+.include "includes/ram.inc"
 
 
 .segment "CODE"

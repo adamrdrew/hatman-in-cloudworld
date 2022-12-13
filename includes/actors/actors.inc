@@ -1,20 +1,29 @@
 ; These are the actor type IDs that we use to 
 ; assign actors to their logic and what not
 
-MAX_ACTORS = 16
+MAX_ACTORS = 21
 
 .enum ActorType
-    NULL        = $FF
-    BOTTLE      = 1
-    BULLET      = 2
-    COIN        = 3
-    CRAWLER     = 4
-    FLYER       = 5
-    HEART       = 6
-    WALKER      = 7
-    PLAYER      = 8
-    EXPLOSION   = 9
-    START_BUTTON = 10
+    NULL            = $FF
+    BOTTLE          = 1
+    BULLET          = 2
+    COIN            = 3
+    CRAWLER         = 4
+    FLYER           = 5
+    HEART           = 6
+    WALKER          = 7
+    PLAYER          = 8
+    EXPLOSION       = 9
+    START_BUTTON    = 10
+.endenum
+
+.enum ActorStates
+    CREATING        = 0
+    TAKING_DAMAGE   = 1
+    IDLE            = 2
+    DYING           = 3
+    ATTACKING       = 4
+    DELETING        = 5
 .endenum
 
 .struct Actor
@@ -29,6 +38,7 @@ MAX_ACTORS = 16
     isOnGround              .byte
     collisionPointOffset    .byte
     oamOffset               .byte
+    state                   .byte
 .endstruct
 
 .include "bottle.inc"
@@ -286,12 +296,13 @@ MAX_ACTORS = 16
         ; hitpoints
         lda (LevelActorDataPointer), y
         sta NewActor+Actor::hitpoints
-        ; gravity, xSpeed, and ySpeed always start at 0
+        ; These all start as 0 as their default state
         lda #0
         sta NewActor+Actor::gravity
         sta NewActor+Actor::xSpeed
         sta NewActor+Actor::ySpeed
         sta NewActor+Actor::isOnGround
+        sta NewActor+Actor::state
 
         iny
         lda (LevelActorDataPointer), y
@@ -616,6 +627,8 @@ MAX_ACTORS = 16
         sta Actors+Actor::collisionPointOffset, x
         lda NewActor+Actor::oamOffset
         sta Actors+Actor::oamOffset, x
+        lda NewActor+Actor::state, x
+        sta Actors+Actor::state, x
 
         jmp Exit
     

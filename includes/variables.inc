@@ -81,8 +81,6 @@ TileCollision_NametablePointer: .res 2
 ; Set to TRUE at the end of PPU NMI
 IsDrawComplete: .res 1
 
-; The array of actors
-Actors:     .res 16 * 11
 ; The swap space used when creating a new actor
 NewActor:   .res 11
 ; Pointer to the current actor. Used in a lot of per-actor code
