@@ -56,7 +56,11 @@ TileCollisionYHiBytes:
 .byte $02, $02, $02, $02,  $02, $02, $02, $02
 .byte $03, $03, $03, $03,  $03, $03, $03, $03
 
-
+; This is the actor to tile collision checking code 
+; it is well documented because it is tricky and I don't want to 
+; forget how it works!
+;
+; args:
 ; X must be set to the x offset to check in pixels
 ; Y must be set to the y offset to check in pixels
 ; result will be placed into A as 1 or 0 
@@ -116,25 +120,47 @@ TileCollisionYHiBytes:
         
         ; The problem we face here is that the nametable is 930 bytes, so
         ; we can't simply multiply TileSpace_X x TileSpace_Y and get the offset
-        ; as the result wouldn't fit in a 8 but value. However, we can get tricky
+        ; as the result wouldn't fit in a 8 bit value. However, we can get tricky
         ; and do 16 bit math with the help of 2 more lookup tables in order to
         ; change the address the pointer is pointing to from the start of the 
         ; nametable to our colliding tile
-        
-         
+
+        ; Grab our tilespace Y coordinate
+        ; This represents what row we are on in the nametable
+        ; each row contains 32 tiles
+        ; meaning each row represents an offset of TileSpace Y * 32
+        ; Y pos 20 for example would be offset 20 * 32 = 640
+        ; But we can't store 640 in a byte!
+        ; True, but we can perform 16 bit math if we do it in 2 steps
+        ;   1. Add multiples of 255 to the high byte
+        ;   2. Add multiples of 32 to the lo byte
+        ; For example, if we want to find the Y offset into the nametable for
+        ; Y (row) 20 we can find the pixel offset of 640 by doing the following
+        ;   1. Look up in TileCollisionYHiBytes, TileY and find out we need to add 2 x 255 or $02 to the hi byte
+        ;   2. Look up in TileCollisionYLoBytes, TileY and find out we need to add $80 or 128 to the low byte
+        ; The result means we add $0280 to the pointer ($80 to the lo byte and $02 to the high byte) to
+        ; achieve an offset by a 16 bit value!
         ldy TileCollision_TileSpaceY 
         clc
         lda TileCollision_NametablePointer
+        ; Find our offset for multiples of 32 and move the pointer by that much
         adc TileCollisionYLoBytes, y
         sta TileCollision_NametablePointer
 
         lda TileCollision_NametablePointer+1
         adc #0
+        ; Find our offset for multiples of 255 and move our pointer by that much
         adc TileCollisionYHiBytes, y
         sta TileCollision_NametablePointer+1
 
+        ; OK, we have now moved our pointer into the nametable to the position of the start 
+        ; of the row the tile we want is on. Now we just need to add the tile x position to the pointer
+        ; to get the rest of the way. The X position just represents a simple 8 bit offset so no need for
+        ; lookups
         ldy TileCollision_TileSpaceX
-        lda (TileCollision_NametablePointer), y                                   
+        ; The value we find at this offset will be thhe ID of the tile at that spot in the nametable
+        lda (TileCollision_NametablePointer), y               
+        ; In this game we treat any tile with an Id higher that $E0 as solid.                    
         cmp #$E0                                        
         bcc Exit                                        
             lda #1                                      
