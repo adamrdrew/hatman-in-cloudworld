@@ -1,7 +1,7 @@
 .SEGMENT "RAM"
 
 ; The swap space used when creating a new actor
-NewActor:   .res 12
+NewActor:   .res ACTOR_SIZE
 
 ; The array of actors
-Actors:     .res 12 * 14
+Actors:     .res ACTOR_SIZE * MAX_ACTORS

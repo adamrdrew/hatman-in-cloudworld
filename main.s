@@ -1,11 +1,11 @@
+.include "includes/actors/actor_types.inc"
+.include "includes/constants.inc"
 .include "includes/header.inc"
-
 .include "includes/variables.inc"
 .include "includes/ram.inc"
 
 
 .segment "CODE"
-    .include "includes/constants.inc"
     .include "includes/init.inc"
     .include "includes/utils.inc"
     .include "includes/controller.inc"
