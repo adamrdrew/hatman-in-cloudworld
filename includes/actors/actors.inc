@@ -145,14 +145,9 @@
             ; Load A with CurrentActor type
             lda_CurrentActor Actor::type
             
-            ;cmp #ActorType::NULL
-            ;beq NextActor
-            ;cmp #ActorType::PLAYER
-            ;beq DoCollisions
-            ;    cmp #ActorType::BULLET
-            ;    beq DoCollisions
-            ;        jmp NextActor
-            DoCollisions:
+            lda_CurrentActor Actor::collides
+            cmp #FALSE
+            beq NextActor
 
             ;Cache Registers
             CacheRegisters
