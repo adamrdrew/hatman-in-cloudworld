@@ -37,4 +37,6 @@
     collisionPointOffset    .byte
     oamOffset               .byte
     state                   .byte
+    frame                   .byte
+    collides                .byte 
 .endstruct

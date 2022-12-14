@@ -145,13 +145,13 @@
             ; Load A with CurrentActor type
             lda_CurrentActor Actor::type
             
-            cmp #ActorType::NULL
-            beq NextActor
-            cmp #ActorType::PLAYER
-            beq DoCollisions
-                cmp #ActorType::BULLET
-                beq DoCollisions
-                    jmp NextActor
+            ;cmp #ActorType::NULL
+            ;beq NextActor
+            ;cmp #ActorType::PLAYER
+            ;beq DoCollisions
+            ;    cmp #ActorType::BULLET
+            ;    beq DoCollisions
+            ;        jmp NextActor
             DoCollisions:
 
             ;Cache Registers
@@ -264,6 +264,8 @@
         sta NewActor+Actor::isOnGround
         lda #ActorStates::CREATING
         sta NewActor+Actor::state
+        sta NewActor+Actor::frame
+        sta NewActor+Actor::collides
 
         iny
         lda (LevelActorDataPointer), y
@@ -590,6 +592,10 @@
         sta Actors+Actor::oamOffset, x
         lda NewActor+Actor::state, x
         sta Actors+Actor::state, x
+        lda NewActor+Actor::collides, x
+        sta Actors+Actor::collides, x
+        lda NewActor+Actor::frame, x
+        sta Actors+Actor::frame, x
 
         jmp Exit
     

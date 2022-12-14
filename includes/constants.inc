@@ -25,7 +25,7 @@ STATE_TAKING_DAMAGE = 04
 TRUE    = 1
 FALSE   = 0
 
-MAX_ACTORS = 20
+MAX_ACTORS = 16
 ACTOR_SIZE = .sizeof(Actor)
 
 ; APU Registers
