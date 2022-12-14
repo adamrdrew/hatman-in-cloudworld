@@ -129,6 +129,11 @@
                 jsr Actor_Player_SpriteCollision
                 rts
             :
+            cmp #ActorType::BULLET
+            bne :+
+                jsr Actor_Bullet_SpriteCollision
+                rts
+            :
             
 
             NextActor:

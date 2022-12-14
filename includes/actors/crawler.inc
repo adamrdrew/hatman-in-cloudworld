@@ -43,8 +43,8 @@
 .endproc
 
 .proc Actor_Crawler_Logic
-    lda #TRUE
-    sta_CurrentActor Actor::collides
+    ;lda #TRUE
+    ;sta_CurrentActor Actor::collides
 
     lda_CurrentActor Actor::state
     cmp #ActorStates::CREATING

@@ -31,8 +31,8 @@
 .endproc
 
 .proc Actor_Walker_Logic
-        lda #TRUE
-        sta_CurrentActor Actor::collides
+        ;lda #TRUE
+        ;sta_CurrentActor Actor::collides
         
         lda #1
         sta_CurrentActor Actor::xSpeed

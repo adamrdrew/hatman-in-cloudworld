@@ -2,6 +2,7 @@
 ; Must be called from the step logic of a CurrentActor
 .proc Actor_BulletNew
 
+
         lda #ActorType::BULLET
         sta NewActor+Actor::type  
         
@@ -48,6 +49,9 @@
         clc
         adc #4
         sta ActorOAMOffset
+
+        lda #TRUE
+        sta NewActor+Actor::collides
 
         jsr Actor_AddToArray
 
