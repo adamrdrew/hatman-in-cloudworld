@@ -9,6 +9,9 @@
     ; This is the player state machine. Player object state is never updated anywhere else
     ; Instead we set states and react to the environment
     .proc Actor_Player_Logic
+        lda #TRUE
+        sta_CurrentActor Actor::collides
+
         ; We start every step assuming we're idle
         lda #STATE_IDLE
         sta PlayerState

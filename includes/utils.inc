@@ -126,3 +126,23 @@
         lda #>Actors
         sta CollidingActorPtr+1
 .endmacro
+
+.macro CreateCurrentActorPointerFromY
+        tya
+        clc
+        adc #<Actors
+        sta CurrentActorPtr
+
+        lda #>Actors
+        sta CurrentActorPtr+1
+.endmacro
+
+.macro CreateCollidingActorPointerFromY
+        tya
+        clc
+        adc #<Actors
+        sta CollidingActorPtr
+        
+        lda #>Actors
+        sta CollidingActorPtr+1
+.endmacro

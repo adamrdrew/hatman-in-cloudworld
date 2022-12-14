@@ -173,12 +173,12 @@ TileCollisionYHiBytes:
 .proc Actor_TakeDamageAndMaybeDie
     lda_CollidingActor Actor::type
     cmp #ActorType::BULLET
-    ;bne Exit
-    ;    lda_CurrentActor Actor::hitpoints
-    ;    sec
-    ;    sbc #1
-    ;    cmp #0
-    ;    bne :+
+    bne Exit
+        lda_CurrentActor Actor::hitpoints
+        sec
+        sbc #1
+        cmp #0
+        bne :+
 
             jsr Actor_ExplosionNew
             jsr Actor_DeleteCurrentActor
@@ -187,10 +187,10 @@ TileCollisionYHiBytes:
             ldx #FAMISTUDIO_SFX_CH3
             jsr famistudio_sfx_play
             rts
-    ;    :
-    ;    sta_CurrentActor Actor::hitpoints
-    ;Exit:
-    ;rts
+        :
+        sta_CurrentActor Actor::hitpoints
+    Exit:
+    rts
 .endproc
 
 ; Called whenever the actor is moving horizontally

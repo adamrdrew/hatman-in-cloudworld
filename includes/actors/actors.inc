@@ -16,31 +16,34 @@
     lda #0
     sta CollisionOccured 
 
+    ; ID of current actor is in y
+    ; ID of colliding actor is in x
+
     ; First we need to find the point in the middle of CollidingActor
     ; this is the point we are going to evaluate to see if it is
     ; within CurrentActor's box
-    lda_CollidingActor Actor::xPos
+    lda Actors+Actor::xPos, x
     sta ActorCollisionPointX
-    lda_CollidingActor Actor::collisionPointOffset
+    lda Actors+Actor::collisionPointOffset, x
     clc
     adc ActorCollisionPointX
     sta ActorCollisionPointX
 
-    lda_CollidingActor Actor::yPos
+    lda Actors+Actor::yPos, x
     sta ActorCollisionPointY
-    lda_CollidingActor Actor::collisionPointOffset
+    lda Actors+Actor::collisionPointOffset, x
     clc
     adc ActorCollisionPointY
     sta ActorCollisionPointY
 
     ; If pointx is less than actor x exit
-    lda_CurrentActor Actor::xPos
+    lda Actors+Actor::xPos, y
     cmp ActorCollisionPointX
     ; bcs is greater than
     bcs Exit
 
     ; if point y is less than actor y exit
-    lda_CurrentActor Actor::yPos
+    lda Actors+Actor::yPos, y
     cmp ActorCollisionPointY
     ; bcs is greater than
     bcs Exit
@@ -80,11 +83,16 @@
             ; Set the CollisingActor
             ; The CollidingActor is what the CurrentActor will use in its 
             ; collision logic if a collision has occured
-            CreateCollidingActorPointerFromX
+            
+            lda Actors+Actor::type, x
+            cmp #ActorType::NULL
+            beq NextActor
 
-            lda_CurrentActor Actor::type
+
+            ldy CurrentActorOffset
+            lda Actors+Actor::type, y
             sta DebugByte
-            lda_CollidingActor Actor::type
+            lda Actors+Actor::type, x
             cmp DebugByte
             beq NextActor
 
@@ -97,25 +105,31 @@
             cmp #0
             beq NextActor
 
-            lda_CurrentActor Actor::type
-
-
             ; OK if we are here then we detected a collision between CurrentActor and CollidingActor
             ; Now just route to our collider logic
             ; Notice we exit, not NextActor
             ; We can only handle one collision per actor, per frame
             ; Trying to do more would get really tricky and would cost more memory
             ; Also we only perform collision logic for some actor type, most dont need it
-            cmp #ActorType::BULLET
+            CreateCollidingActorPointerFromX
+            CreateCurrentActorPointerFromY
+            lda Actors+Actor::type, y
+            cmp #ActorType::CRAWLER
             bne :+
-                jsr Actor_Bullet_SpriteCollision
-                jmp Exit
+                jsr Actor_Crawler_SpriteCollision
+                rts
+            :
+            cmp #ActorType::WALKER
+            bne :+
+                jsr Actor_Walker_SpriteCollision
+                rts
             :
             cmp #ActorType::PLAYER
             bne :+
                 jsr Actor_Player_SpriteCollision
-                jmp Exit
+                rts
             :
+            
 
             NextActor:
                 txa                                 ; transfer x to a
@@ -141,19 +155,19 @@
             jmp Exit
         CheckCollisionsForActor:
             ; Create CurrentActor pointer
-            CreateCurrentActorPointerFromX
+            ;CreateCurrentActorPointerFromX
 
-            
-            lda_CurrentActor Actor::collides
+            ; If the current actor doesn't support collision detection then move on to the next actor
+            lda Actors+Actor::collides, x
             cmp #FALSE
             beq NextActor
 
             ;Cache Registers
             CacheRegisters
 
-            lda_CurrentActor Actor::collisionPointOffset
+            lda Actors+Actor::collisionPointOffset, x
             sta ActorCurrentBottomRightX
-            lda_CurrentActor Actor::xPos
+            lda Actors+Actor::xPos, x
             clc
             adc ActorCurrentBottomRightX
             clc
@@ -161,15 +175,17 @@
             sta ActorCurrentBottomRightX
 
 
-            lda_CurrentActor Actor::collisionPointOffset
+            lda Actors+Actor::collisionPointOffset, x
             sta ActorCurrentBottomRightY
-            lda_CurrentActor Actor::yPos
+            lda Actors+Actor::yPos, x
             clc
             adc ActorCurrentBottomRightY
             clc
             adc ActorCurrentBottomRightY
             sta ActorCurrentBottomRightY
 
+            ; Cache the current actor's offset so we can use it in the collision logic
+            stx CurrentActorOffset
 
             ; Call the routine that will iterate over the actors
             ; and check them against this actor
@@ -273,12 +289,7 @@
         ; Set up the OAM offset for the next actor
         ; by increading it by our oam byte size + 1
         ; First get the oam byte size from the config
-        ;iny
-        ;lda (LevelActorDataPointer), y
-        ; Add the current OAM Offset
-        ;clc
-        ;adc ActorOAMOffset
-        ;sta ActorOAMOffset
+
         lda NewActor+Actor::collisionPointOffset
         cmp #8
         bne :+
