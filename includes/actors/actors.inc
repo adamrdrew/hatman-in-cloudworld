@@ -142,8 +142,7 @@
         CheckCollisionsForActor:
             ; Create CurrentActor pointer
             CreateCurrentActorPointerFromX
-            ; Load A with CurrentActor type
-            lda_CurrentActor Actor::type
+
             
             lda_CurrentActor Actor::collides
             cmp #FALSE
@@ -257,10 +256,11 @@
         sta NewActor+Actor::xSpeed
         sta NewActor+Actor::ySpeed
         sta NewActor+Actor::isOnGround
-        lda #ActorStates::CREATING
-        sta NewActor+Actor::state
         sta NewActor+Actor::frame
         sta NewActor+Actor::collides
+        lda #ActorStates::CREATING
+        sta NewActor+Actor::state
+
 
         iny
         lda (LevelActorDataPointer), y
