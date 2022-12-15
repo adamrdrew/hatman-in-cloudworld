@@ -1,60 +1,59 @@
 ; Creates a new bullet
 ; Must be called from the step logic of a CurrentActor
 .proc Actor_BulletNew
-
-
-        lda #ActorType::BULLET
-        sta NewActor+Actor::type  
-        
-        lda_CurrentActor Actor::facingRight
-        cmp #TRUE
-        bne PutItToTheLeft
-            lda_CurrentActor Actor::xPos
-            clc
-            adc #18
-            jmp SaveIt
-        PutItToTheLeft:
-            lda_CurrentActor Actor::xPos
-            clc
-            adc #249         
-        SaveIt:
-        sta NewActor+Actor::xPos
-
-        lda_CurrentActor Actor::yPos
+    lda #ActorType::BULLET
+    sta NewActor+Actor::type  
+    
+    lda_CurrentActor Actor::facingRight
+    cmp #TRUE
+    bne PutItToTheLeft
+        lda_CurrentActor Actor::xPos
         clc
-        adc #04
-        sta NewActor+Actor::yPos
-
-
-        lda_CurrentActor Actor::facingRight
-        sta NewActor+Actor::facingRight
-
-        lda #$FF
-        sta NewActor+Actor::hitpoints
-
-        ; I am cheating and using gravity to store a framecounter
-        lda #0
-        sta NewActor+Actor::gravity
-        lda #0
-        sta NewActor+Actor::ySpeed
-        lda #3
-        sta NewActor+Actor::xSpeed
-
-        lda #4
-        sta NewActor+Actor::collisionPointOffset
-
-        lda ActorOAMOffset
-        sta NewActor+Actor::oamOffset
-
+        adc #18
+        jmp SaveIt
+    PutItToTheLeft:
+        lda_CurrentActor Actor::xPos
         clc
-        adc #4
-        sta ActorOAMOffset
+        adc #249         
+    SaveIt:
+    sta NewActor+Actor::xPos
+    sta BulletOriginX
 
-        lda #TRUE
-        sta NewActor+Actor::collides
+    lda_CurrentActor Actor::yPos
+    clc
+    adc #04
+    sta NewActor+Actor::yPos
 
-        jsr Actor_AddToArray
 
+    lda_CurrentActor Actor::facingRight
+    sta NewActor+Actor::facingRight
+
+    lda #$FF
+    sta NewActor+Actor::hitpoints
+
+    ; I am cheating and using gravity to store a framecounter
+    lda #0
+    sta NewActor+Actor::gravity
+    lda #0
+    sta NewActor+Actor::ySpeed
+    lda #3
+    sta NewActor+Actor::xSpeed
+
+    lda #4
+    sta NewActor+Actor::collisionPointOffset
+
+    lda ActorOAMOffset
+    sta NewActor+Actor::oamOffset
+
+    clc
+    adc #4
+    sta ActorOAMOffset
+
+    lda #TRUE
+    sta NewActor+Actor::collides
+
+    jsr Actor_AddToArray
+    Exit:
         rts
 .endproc
 
@@ -62,6 +61,16 @@
 .proc Actor_Bullet_Logic
     jsr Actor_Bullet_Draw
     
+    lda_CurrentActor Actor::frame
+    sec
+    adc #1
+    sta_CurrentActor Actor::frame
+    cmp #120
+    bne :+
+        dec BulletCount
+        jsr Actor_DeleteCurrentActor
+    :
+
     lda_CurrentActor Actor::facingRight
     cmp #TRUE
     bne MoveLeft
@@ -80,6 +89,7 @@
     sec
     cmp #03
     bcs CheckOtherSideOfScreen
+        dec BulletCount
         jsr Actor_DeleteCurrentActor
     CheckOtherSideOfScreen:
     sec
@@ -98,6 +108,7 @@
             cmp #TRUE
             bne Exit
             lda #0
+            dec BulletCount
             jsr Actor_ExplosionNew
             jsr Actor_DeleteCurrentActor    
             rts
@@ -108,6 +119,7 @@
             cmp #TRUE
             bne Exit
             lda #1
+            dec BulletCount
             jsr Actor_ExplosionNew
             jsr Actor_DeleteCurrentActor           
             rts
@@ -174,19 +186,18 @@
 
 .proc Actor_Bullet_SpriteCollision
     lda_CollidingActor Actor::type
+    dec BulletCount
     cmp #ActorType::CRAWLER
     bne :+
-        inc Score
-        jsr Actor_ExplosionNew
-        jsr Actor_DeleteCurrentActor
-        jsr Actor_DeleteCollidingActor
+        jsr Actor_Crawler_SpriteCollision
     :
     cmp #ActorType::WALKER
     bne :+
-        inc Score
-        jsr Actor_ExplosionNew
-        jsr Actor_DeleteCurrentActor
-        jsr Actor_DeleteCollidingActor
+        jsr Actor_Walker_SpriteCollision
     :
-        rts
+    lda #02
+    ldx #FAMISTUDIO_SFX_CH3
+    jsr famistudio_sfx_play
+    jsr Actor_DeleteCurrentActor
+    rts
 .endproc

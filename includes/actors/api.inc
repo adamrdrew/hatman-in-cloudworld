@@ -163,32 +163,53 @@ TileCollisionYHiBytes:
         ; In this game we treat any tile with an Id higher that $E0 as solid.                    
         cmp #$E0                                        
         bcc Exit                                        
-            lda #1                                      
+            lda #TRUE                                    
             rts
         Exit:
-        lda #0                                          
+        lda #FALSE                                   
         rts
 .endproc
 
-.proc Actor_TakeDamageAndMaybeDie
-    lda_CollidingActor Actor::type
-    cmp #ActorType::BULLET
-    bne Exit
-        lda_CurrentActor Actor::hitpoints
-        sec
-        sbc #1
-        cmp #0
-        bne :+
 
-            jsr Actor_ExplosionNew
-            jsr Actor_DeleteCurrentActor
-            jsr Actor_DeleteCollidingActor
-            lda #02
-            ldx #FAMISTUDIO_SFX_CH3
-            jsr famistudio_sfx_play
-            rts
-        :
-        sta_CurrentActor Actor::hitpoints
+
+
+.proc Actor_DamageKnockBack
+
+
+
+    ;lda_CurrentActor Actor::xPos
+    ;cmp PlayerXPos
+    ;bcs :+
+    ;    lda_CollidingActor Actor::xPos
+    ;    sec
+    ;    sbc #16
+    ;    sta_CollidingActor Actor::xPos
+    ;    jmp Exit
+    ;:
+    ;lda_CollidingActor Actor::xPos
+    ;clc
+    ;adc #16
+    ;sta_CollidingActor Actor::xPos
+    ;Exit:
+    ;    rts
+.endproc
+
+.proc Actor_TakeDamageAndMaybeDie
+    lda ActorStates::TAKING_DAMAGE
+    sta_CollidingActor Actor::state
+    lda #0
+    sta_CollidingActor Actor::frame
+    
+    lda_CollidingActor Actor::hitpoints
+    sec
+    sbc #1
+    cmp #0
+    bne :+
+        jsr Actor_ExplosionNew
+        jsr Actor_DeleteCollidingActor
+        rts
+    :
+    sta_CollidingActor Actor::hitpoints
     Exit:
     rts
 .endproc
@@ -229,9 +250,9 @@ TileCollisionYHiBytes:
 .endproc
 
 .proc Actor_UpdateSpritePositionHorizontal
-    lda Frame
-    cmp #2
-    bcc Exit
+   ; lda Frame
+   ; cmp #2
+   ; bcc Exit
 
     lda_CurrentActor Actor::xSpeed
     sta ActorXSpeedCache

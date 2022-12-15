@@ -43,9 +43,6 @@
 .endproc
 
 .proc Actor_Crawler_Logic
-    ;lda #TRUE
-    ;sta_CurrentActor Actor::collides
-
     lda_CurrentActor Actor::state
     cmp #ActorStates::CREATING
     bne :+
@@ -70,6 +67,18 @@
     :
     cmp #ActorStates::TAKING_DAMAGE
     bne :+
+        ldx #18
+        ldy #8
+        jsr Actor_TestTileCollision
+        cmp #TRUE
+        bne :+
+            lda ActorStates::IDLE
+            sta_CurrentActor Actor::state
+            jmp Exit
+        :
+        lda #2
+        sta_CurrentActor Actor::xSpeed
+        jsr Actor_UpdateSpritePositionHorizontal
         jmp Exit
     :
     cmp #ActorStates::DYING 

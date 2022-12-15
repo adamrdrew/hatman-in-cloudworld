@@ -43,6 +43,11 @@
         lda BButtonPressed
         cmp #TRUE
         bne ExitBButtonHandler
+            ; We only allow 3 bullets on screen at a time
+            lda BulletCount
+            cmp #3
+            beq Exit
+            inc BulletCount
             jsr PlayerShootBullet
             lda #00
             ldx #FAMISTUDIO_SFX_CH0
@@ -67,11 +72,9 @@
             jsr Actor_UpdateSpritePositionHorizontal
         Falling:
         Jumping:
+
         Exit:
         jsr Actor_Player_Draw_Right
-
-
-
         rts
     .endproc
 

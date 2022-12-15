@@ -78,5 +78,6 @@ WaitSecondVBlank:
     lda #0
     sta ActorXSpeedCache
     sta ActorYSpeedCache
+    sta BulletCount
     ; sta PlayerIsOnTheGround
 .endmacro

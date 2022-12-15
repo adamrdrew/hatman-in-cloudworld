@@ -134,3 +134,9 @@ CollisionOccured: .res 1
 
 CurrentActorOffset: .res 1
 CollidingActorOffset: .res 1
+ActorXPosCache: .res 1
+; When the bullet hits an enemy we need to know where it came from so we
+; can react in the correct direction. When the bullet is created we store
+; its x location here
+BulletCount: .res 1
+BulletOriginX: .res 1

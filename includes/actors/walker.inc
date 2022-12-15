@@ -31,9 +31,24 @@
 .endproc
 
 .proc Actor_Walker_Logic
-        ;lda #TRUE
-        ;sta_CurrentActor Actor::collides
-        
+    sta_CurrentActor Actor::state
+    cmp ActorStates::TAKING_DAMAGE
+    bne :+
+        ldx #2
+        ldy #8
+        jsr Actor_TestTileCollision
+        cmp #TRUE
+        bne :+
+            lda ActorStates::IDLE
+            sta_CurrentActor Actor::state
+            jmp Exit
+        :
+        lda #2
+        sta_CurrentActor Actor::xSpeed
+        jmp Exit
+    :
+    cmp ActorStates::IDLE
+    bne :+
         lda #1
         sta_CurrentActor Actor::xSpeed
 
@@ -44,8 +59,9 @@
 
         jsr Actor_WalkerWalkAndForth
 
-
         jsr Actor_Walker_Draw
+        jmp Exit
+    :
 
     Exit:
     rts
