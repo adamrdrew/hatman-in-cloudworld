@@ -68,10 +68,6 @@
         rts
 .endproc
 
-.proc Actor_TestCall
-    rts
-.endproc
-
 .proc Actor_CheckCollisionsForCurrentActor
     ldx #0
     IterateOverActors:
@@ -114,16 +110,6 @@
             CreateCollidingActorPointerFromX
             CreateCurrentActorPointerFromY
             lda Actors+Actor::type, y
-            cmp #ActorType::CRAWLER
-            bne :+
-                jsr Actor_Crawler_SpriteCollision
-                rts
-            :
-            cmp #ActorType::WALKER
-            bne :+
-                jsr Actor_Walker_SpriteCollision
-                rts
-            :
             cmp #ActorType::PLAYER
             bne :+
                 jsr Actor_Player_SpriteCollision
@@ -135,7 +121,6 @@
                 rts
             :
             
-
             NextActor:
                 txa                                 ; transfer x to a
                 clc                                 ; clear carry flag
@@ -163,6 +148,11 @@
             ;CreateCurrentActorPointerFromX
 
             ; If the current actor doesn't support collision detection then move on to the next actor
+            lda Actors+Actor::type, x
+            cmp #ActorType::BULLET
+            bne :+
+                ldy #23
+            :
             lda Actors+Actor::collides, x
             cmp #FALSE
             beq NextActor
@@ -188,6 +178,8 @@
             clc
             adc ActorCurrentBottomRightY
             sta ActorCurrentBottomRightY
+
+
 
             ; Cache the current actor's offset so we can use it in the collision logic
             stx CurrentActorOffset
@@ -322,13 +314,6 @@
     rts
 .endproc
 
-
-
-
-
-
-
-
 .proc Actor_RunAll
     ldx #0
     IterateOverActors:
@@ -341,7 +326,7 @@
         CreateCurrentActorPointerFromX
         lda_CurrentActor Actor::type
 
-        cmp ActorType::NULL
+        cmp #ActorType::NULL
         beq SkipNull
 
         CacheRegisters
@@ -601,11 +586,14 @@
         sta Actors+Actor::collisionPointOffset, x
         lda NewActor+Actor::oamOffset
         sta Actors+Actor::oamOffset, x
-        lda NewActor+Actor::state, x
+        
+        lda NewActor+Actor::state
         sta Actors+Actor::state, x
-        lda NewActor+Actor::collides, x
+
+        lda NewActor+Actor::collides
         sta Actors+Actor::collides, x
-        lda NewActor+Actor::frame, x
+        
+        lda NewActor+Actor::frame
         sta Actors+Actor::frame, x
 
         jmp Exit

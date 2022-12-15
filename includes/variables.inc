@@ -133,3 +133,4 @@ ActorCurrentBottomRightY: .res 1
 CollisionOccured: .res 1
 
 CurrentActorOffset: .res 1
+CollidingActorOffset: .res 1
