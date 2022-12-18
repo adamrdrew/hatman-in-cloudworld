@@ -42,17 +42,7 @@
     rts
 .endproc
 
-.proc Actor_Crawler_DieIfHPZero
-    lda_CurrentActor Actor::hitpoints
-    cmp #0
-    bne Exit
-    
-    dec EnemyCount
 
-    jsr Actor_DeleteCurrentActor
-
-    rts
-.endproc
 
 .proc Actor_Crawler_Logic
     lda_CurrentActor Actor::state
@@ -69,7 +59,7 @@
     :
     cmp #ActorStates::IDLE 
     bne :+
-        jsr Actor_Crawler_DieIfHPZero
+        jsr Actor_DieIfHPZero
         jsr Actor_HandleVerticalTileCollission
         jsr Actor_UpdateSpritePositionVertical
         jsr Actor_CrawlerWalkAndForth

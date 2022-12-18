@@ -240,6 +240,17 @@ TileCollisionYHiBytes:
         rts
 .endproc
 
+.proc Actor_DieIfHPZero
+    lda_CurrentActor Actor::hitpoints
+    cmp #0
+    bne Exit
+    
+    dec EnemyCount
+
+    jsr Actor_DeleteCurrentActor
+    Exit:
+        rts
+.endproc
 
 .proc Actor_TakeDamageAndMaybeDie
     lda_CollidingActor Actor::hitpoints

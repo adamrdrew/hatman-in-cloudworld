@@ -34,6 +34,7 @@
     lda_CurrentActor Actor::state
     cmp #ActorStates::CREATING
     bne :+
+        inc EnemyCount
         lda #1
         sta_CurrentActor Actor::xSpeed
         lda #ActorStates::IDLE
@@ -44,6 +45,7 @@
     :
     cmp #ActorStates::IDLE 
     bne :+
+        jsr Actor_DieIfHPZero
         jsr Actor_HandleVerticalTileCollission
         jsr Actor_UpdateSpritePositionVertical
         jsr Actor_WalkerWalkAndForth
