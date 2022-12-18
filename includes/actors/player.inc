@@ -2,7 +2,7 @@
 .include "api.inc"
 
     .proc PlayerShootBullet
-        jsr Actor_BulletNew
+        jsr Actor_Player_CreateBullet
         rts
     .endproc
 
@@ -44,14 +44,7 @@
         cmp #TRUE
         bne ExitBButtonHandler
             ; We only allow 3 bullets on screen at a time
-            lda BulletCount
-            cmp #3
-            beq Exit
-            inc BulletCount
             jsr PlayerShootBullet
-            lda #00
-            ldx #FAMISTUDIO_SFX_CH0
-            jsr famistudio_sfx_play 
         ExitBButtonHandler:
 
         ; Because of the constant downward force of gravity we are always potentially
@@ -273,6 +266,77 @@
         rts
 .endproc
 
+.proc Actor_Player_CreateBullet
+    ; Check if we can create a new bullet
+    lda BulletCount
+    cmp #3
+    bcs Exit
+    inc BulletCount
+
+    lda #ActorType::BULLET
+    sta NewActor+Actor::type  
+    
+    lda_CurrentActor Actor::facingRight
+    cmp #TRUE
+    bne :+
+        lda_CurrentActor Actor::xPos
+        clc
+        adc #8
+    :
+    cmp #FALSE 
+    bne :+
+        lda_CurrentActor Actor::xPos
+        clc
+        adc #248       
+    :
+    sta NewActor+Actor::xPos
+
+    lda_CurrentActor Actor::yPos
+    clc
+    adc #04
+    sta NewActor+Actor::yPos
+
+
+    lda_CurrentActor Actor::facingRight
+    sta NewActor+Actor::facingRight
+
+    lda #$FF
+    sta NewActor+Actor::hitpoints
+
+
+    lda #0
+    ; We use gravity as a raw frame counter for the bullet
+    ; this is super hacky and terrible. But we need to do this
+    ; because we're already using frame for the animation
+    sta NewActor+Actor::gravity
+    sta NewActor+Actor::ySpeed
+    sta NewActor+Actor::frame
+
+    lda #ActorStates::IDLE
+    sta NewActor+Actor::state
+
+    lda #3
+    sta NewActor+Actor::xSpeed
+
+    lda #4
+    sta NewActor+Actor::collisionPointOffset
+
+    lda ActorOAMOffset
+    sta NewActor+Actor::oamOffset
+
+    clc
+    adc #4
+    sta ActorOAMOffset
+
+    lda #TRUE
+    sta NewActor+Actor::collides
+
+    jsr Actor_Bullet_PlayShootSound
+
+    jsr Actor_AddToArray
+    Exit:
+        rts
+.endproc
 
 ;Player_SpriteData:
     ;       Y       Tile    Attrs       X

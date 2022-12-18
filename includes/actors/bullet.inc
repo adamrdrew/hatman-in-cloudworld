@@ -1,142 +1,132 @@
 ; Creates a new bullet
 ; Must be called from the step logic of a CurrentActor
-.proc Actor_BulletNew
-    lda #ActorType::BULLET
-    sta NewActor+Actor::type  
-    
-    lda_CurrentActor Actor::facingRight
-    cmp #TRUE
-    bne PutItToTheLeft
-        lda_CurrentActor Actor::xPos
-        clc
-        adc #18
-        jmp SaveIt
-    PutItToTheLeft:
-        lda_CurrentActor Actor::xPos
-        clc
-        adc #249         
-    SaveIt:
-    sta NewActor+Actor::xPos
-    sta BulletOriginX
-
-    lda_CurrentActor Actor::yPos
-    clc
-    adc #04
-    sta NewActor+Actor::yPos
-
-
-    lda_CurrentActor Actor::facingRight
-    sta NewActor+Actor::facingRight
-
-    lda #$FF
-    sta NewActor+Actor::hitpoints
-
-    ; I am cheating and using gravity to store a framecounter
-    lda #0
-    sta NewActor+Actor::gravity
-    lda #0
-    sta NewActor+Actor::ySpeed
-    lda #3
-    sta NewActor+Actor::xSpeed
-
-    lda #4
-    sta NewActor+Actor::collisionPointOffset
-
-    lda ActorOAMOffset
-    sta NewActor+Actor::oamOffset
-
-    clc
-    adc #4
-    sta ActorOAMOffset
-
-    lda #TRUE
-    sta NewActor+Actor::collides
-
-    jsr Actor_AddToArray
-    Exit:
-        rts
+.proc Actor_BulletDelete
+    lda #ActorStates::DYING
+    sta_CurrentActor Actor::state 
+    dec BulletCount
+    jsr Actor_DeleteCurrentActor
+    rts
 .endproc
 
+.proc Actor_BulletExplode
+    lda #02
+    ldx #FAMISTUDIO_SFX_CH3
+    jsr famistudio_sfx_play
+    jsr Actor_ExplosionNew
+    jsr Actor_BulletDelete
+    rts
+.endproc
 
-.proc Actor_Bullet_Logic
-    jsr Actor_Bullet_Draw
-    
-    lda_CurrentActor Actor::frame
-    sec
+.proc Actor_Bullet_PlayShootSound
+    lda #00
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_play
+    rts
+.endproc
+
+.proc Actor_Bullet_DeleteAfter120Frames
+    lda_CurrentActor Actor::gravity
+    clc
     adc #1
-    sta_CurrentActor Actor::frame
+    sta_CurrentActor Actor::gravity
     cmp #120
     bne :+
-        dec BulletCount
-        jsr Actor_DeleteCurrentActor
+        jsr Actor_BulletDelete
     :
+    rts
+.endproc
 
+.proc Actor_Bullet_UpdateXPosition
     lda_CurrentActor Actor::facingRight
     cmp #TRUE
-    bne MoveLeft
+    bne :+
         lda_CurrentActor Actor::xPos
         clc
         adc #4
         sta_CurrentActor Actor::xPos
-        jmp DoneMoving 
-    MoveLeft:
+    :
+    cmp #FALSE 
+    bne :+
         lda_CurrentActor Actor::xPos
         sec
         sbc #4
         sta_CurrentActor Actor::xPos
-    DoneMoving:
-
+    :
+    ; Check for out of bounds
+    ; xPos is still in A here
     sec
-    cmp #03
-    bcs CheckOtherSideOfScreen
-        dec BulletCount
-        jsr Actor_DeleteCurrentActor
-    CheckOtherSideOfScreen:
+    cmp #04
+    bcs :+
+        jsr Actor_BulletDelete
+    :
     sec
     cmp #252
-    bcc CheckForBlocks
-        jsr Actor_DeleteCurrentActor
-    
-    CheckForBlocks:
-        lda_CurrentActor Actor::facingRight
+    bcc :+
+        jsr Actor_BulletDelete
+    :
+    rts
+.endproc
+
+.proc Actor_Bullet_IncrementFrameCounter
+    lda_CurrentActor Actor::frame
+    clc
+    adc #1
+    cmp #60
+    bne :+
+        lda #0
+    :
+    sta_CurrentActor Actor::frame
+    rts
+.endproc
+
+.proc Actor_Bullet_HandleTileCollisions
+    lda_CurrentActor Actor::facingRight
+    cmp #TRUE
+    bne :+
+        ldx #8
+        ldy #4
+        jsr Actor_TestTileCollision
         cmp #TRUE
-        bne Left
-        Right:
-            ldx #8
-            ldy #4
-            jsr Actor_TestTileCollision
-            cmp #TRUE
-            bne Exit
-            lda #0
-            dec BulletCount
-            jsr Actor_ExplosionNew
-            jsr Actor_DeleteCurrentActor    
-            rts
-        Left:
-            ldx #254
-            ldy #4
-            jsr Actor_TestTileCollision
-            cmp #TRUE
-            bne Exit
-            lda #1
-            dec BulletCount
-            jsr Actor_ExplosionNew
-            jsr Actor_DeleteCurrentActor           
-            rts
+        bne Exit
+        jsr Actor_BulletExplode    
+        rts
+    :
+        ldx #254
+        ldy #4
+        jsr Actor_TestTileCollision
+        cmp #TRUE
+        bne Exit
+        jsr Actor_BulletExplode          
     Exit:
+        rts
+.endproc
+
+.proc Actor_Bullet_Logic
+    lda_CurrentActor Actor::state
+    cmp #ActorStates::IDLE
+    bne :+
+        jsr Actor_Bullet_Draw
+        jsr Actor_Bullet_DeleteAfter120Frames
+        jsr Actor_Bullet_UpdateXPosition
+        jsr Actor_Bullet_HandleTileCollisions
+        jsr Actor_Bullet_IncrementFrameCounter
+    :
     rts
 .endproc
 
 .proc Actor_Bullet_Draw
+    ; Get the OAM Offset and trasnfer it to X
     lda_CurrentActor Actor::oamOffset
     tax 
 
+    ; Store the yPos in OAM
     lda_CurrentActor Actor::yPos
     sta OAM_COPY, x
 
-    inx
-    lda_CurrentActor Actor::gravity
 
+    ; Write the sprite index
+    inx
+    lda_CurrentActor Actor::frame
     cmp #0
     bne :+
         lda #$02
@@ -161,43 +151,49 @@
         sta OAM_COPY, x
         jmp Exit
     :
+
     Exit:
-
-    lda_CurrentActor Actor::gravity
-    clc
-    adc #1
-    cmp #60
-    bne SetFrameCounter
-        lda #0
-    SetFrameCounter:
-        sta_CurrentActor Actor::gravity
-
-
+    ; Sprite attrs are always 0
     inx 
     lda #$0
     sta OAM_COPY, x
 
+    ; Store the xPos in OAM
     inx
-
     lda_CurrentActor Actor::xPos
     sta OAM_COPY, x
+
     rts
 .endproc
 
 .proc Actor_Bullet_SpriteCollision
     lda_CollidingActor Actor::type
-    dec BulletCount
     cmp #ActorType::CRAWLER
     bne :+
-        jsr Actor_Crawler_SpriteCollision
+        jsr Actor_Bullet_CollideWithEnemy
     :
     cmp #ActorType::WALKER
     bne :+
-        jsr Actor_Walker_SpriteCollision
+        jsr Actor_Bullet_CollideWithEnemy
     :
-    lda #02
-    ldx #FAMISTUDIO_SFX_CH3
-    jsr famistudio_sfx_play
-    jsr Actor_DeleteCurrentActor
     rts
+.endproc
+
+.proc Actor_Bullet_CollideWithEnemy
+        lda_CurrentActor Actor::facingRight
+        sta_CollidingActor Actor::facingRight
+        
+        SetSpeed:
+            lda_CurrentActor Actor::xSpeed
+            lda #6
+            sta_CollidingActor Actor::xSpeed
+
+            lda #ActorStates::TAKING_DAMAGE
+            sta_CollidingActor Actor::state
+            lda #0
+            sta_CollidingActor Actor::frame
+
+        jsr Actor_BulletExplode
+
+        rts
 .endproc

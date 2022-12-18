@@ -139,4 +139,6 @@ ActorXPosCache: .res 1
 ; can react in the correct direction. When the bullet is created we store
 ; its x location here
 BulletCount: .res 1
-BulletOriginX: .res 1
+
+; This is the count of enemies on the screen
+EnemyCount: .res 1

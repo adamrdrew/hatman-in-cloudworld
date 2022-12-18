@@ -79,5 +79,6 @@ WaitSecondVBlank:
     sta ActorXSpeedCache
     sta ActorYSpeedCache
     sta BulletCount
+    sta EnemyCount
     ; sta PlayerIsOnTheGround
 .endmacro

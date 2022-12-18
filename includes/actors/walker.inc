@@ -31,40 +31,45 @@
 .endproc
 
 .proc Actor_Walker_Logic
-    sta_CurrentActor Actor::state
-    cmp ActorStates::TAKING_DAMAGE
-    bne :+
-        ldx #2
-        ldy #8
-        jsr Actor_TestTileCollision
-        cmp #TRUE
-        bne :+
-            lda ActorStates::IDLE
-            sta_CurrentActor Actor::state
-            jmp Exit
-        :
-        lda #2
-        sta_CurrentActor Actor::xSpeed
-        jmp Exit
-    :
-    cmp ActorStates::IDLE
+    lda_CurrentActor Actor::state
+    cmp #ActorStates::CREATING
     bne :+
         lda #1
         sta_CurrentActor Actor::xSpeed
-
-        ; Because of the constant downward force of gravity we are always potentially
-        ; moving on the Y axis
-        jsr Actor_HandleVerticalTileCollission
-        jsr Actor_UpdateSpritePositionVertical
-
-        jsr Actor_WalkerWalkAndForth
-
-        jsr Actor_Walker_Draw
+        lda #ActorStates::IDLE
+        sta_CurrentActor Actor::state
+        lda #FALSE
+        sta_CurrentActor Actor::isOnGround
         jmp Exit
     :
-
+    cmp #ActorStates::IDLE 
+    bne :+
+        jsr Actor_HandleVerticalTileCollission
+        jsr Actor_UpdateSpritePositionVertical
+        jsr Actor_WalkerWalkAndForth
+        jmp Exit
+    :
+    cmp #ActorStates::ATTACKING
+    bne :+
+        jmp Exit
+    :
+    cmp #ActorStates::TAKING_DAMAGE
+    bne :+
+        jsr Actor_TakeDamageKnockBack
+        jmp Exit
+    :
+    cmp #ActorStates::DYING 
+    bne :+
+        jmp Exit
+    :
+    cmp #ActorStates::DELETING
+    bne :+
+        jmp Exit
+    :
+    
     Exit:
-    rts
+        jsr Actor_Walker_Draw
+        rts
 .endproc
 
 .proc Actor_Walker_Draw

@@ -56,6 +56,76 @@ TileCollisionYHiBytes:
 .byte $02, $02, $02, $02,  $02, $02, $02, $02
 .byte $03, $03, $03, $03,  $03, $03, $03, $03
 
+; This is the knockback proc for enemies when they are hit
+.proc Actor_TakeDamageKnockBack
+    ; Check if the actor is going to hit a wall on the next frame 
+    ; if it keeps moving and if so return to idle state
+    jsr Actor_WillHitWallNextFrame
+    cmp #TRUE   
+    bne :+
+        lda #1
+        sta_CurrentActor Actor::xSpeed
+        lda #ActorStates::IDLE
+        sta_CurrentActor Actor::state
+        lda #0
+        sta_CurrentActor Actor::frame
+        jmp Exit
+    :
+
+    ; Increate the frame counter
+    lda_CurrentActor Actor::frame
+    clc
+    adc #1
+    sta_CurrentActor Actor::frame
+
+    ; If we've reached the 6th frame prepare to return to idle state
+    cmp #6
+    bne :+
+        lda #ActorStates::IDLE
+        sta_CurrentActor Actor::state
+        lda #FALSE
+        sta_CurrentActor Actor::isOnGround
+        lda #0
+        sta_CurrentActor Actor::frame
+        lda #1
+        sta_CurrentActor Actor::xSpeed
+    :
+
+    ; Handle movement
+    jsr Actor_UpdateSpritePositionHorizontal
+    jsr Actor_UpdateSpritePositionVertical
+
+    rts
+.endproc
+
+; This prcedure tests if the current actor will hit a wall
+; in the next frame. It does this by checking the tile that
+; is current position + the x speed + 16 pixels in the direction
+; it takes faceingRight into account
+; Returns TRUE or FALSE in A
+.proc Actor_WillHitWallNextFrame
+    lda_CurrentActor Actor::facingRight
+    cmp #TRUE
+    bne Left
+    Right:
+        lda_CurrentActor Actor::xSpeed
+        clc 
+        adc #17
+        tax
+
+        ldy #8
+        jsr Actor_TestTileCollision
+        rts
+    Left:
+        lda_CurrentActor Actor::xSpeed
+        clc 
+        adc #254
+        tax
+        ldy #8
+        jsr Actor_TestTileCollision
+        rts
+.endproc
+
 ; This is the actor to tile collision checking code 
 ; it is well documented because it is tricky and I don't want to 
 ; forget how it works!
@@ -170,29 +240,6 @@ TileCollisionYHiBytes:
         rts
 .endproc
 
-
-
-
-.proc Actor_DamageKnockBack
-
-
-
-    ;lda_CurrentActor Actor::xPos
-    ;cmp PlayerXPos
-    ;bcs :+
-    ;    lda_CollidingActor Actor::xPos
-    ;    sec
-    ;    sbc #16
-    ;    sta_CollidingActor Actor::xPos
-    ;    jmp Exit
-    ;:
-    ;lda_CollidingActor Actor::xPos
-    ;clc
-    ;adc #16
-    ;sta_CollidingActor Actor::xPos
-    ;Exit:
-    ;    rts
-.endproc
 
 .proc Actor_TakeDamageAndMaybeDie
     lda ActorStates::TAKING_DAMAGE
