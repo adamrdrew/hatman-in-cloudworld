@@ -196,7 +196,6 @@
             sta_CollidingActor Actor::frame
 
         jsr Actor_BulletExplode
-        jsr Actor_TakeDamageAndMaybeDie
 
         rts
 .endproc
