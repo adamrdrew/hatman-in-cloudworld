@@ -183,8 +183,6 @@
         lda_CurrentActor Actor::facingRight
         sta_CollidingActor Actor::facingRight
         
-        
-
         SetSpeed:
             lda_CurrentActor Actor::xSpeed
             lda #6
@@ -194,6 +192,11 @@
             sta_CollidingActor Actor::state
             lda #0
             sta_CollidingActor Actor::frame
+
+        lda_CollidingActor Actor::hitpoints
+        sec
+        sbc #1
+        sta_CollidingActor Actor::hitpoints
 
         jsr Actor_BulletExplode
 
