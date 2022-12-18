@@ -80,5 +80,6 @@ WaitSecondVBlank:
     sta ActorYSpeedCache
     sta BulletCount
     sta EnemyCount
-    ; sta PlayerIsOnTheGround
+    sta InGameplay
+    sta GotoNextLevel
 .endmacro

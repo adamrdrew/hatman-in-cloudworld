@@ -146,3 +146,34 @@
         lda #>Actors
         sta CollidingActorPtr+1
 .endmacro
+
+.proc NMI_ChangeLevel
+    lda GotoNextLevel
+    cmp #FALSE
+    bne :+
+        rts
+    :
+    lda #0
+    sta Coins
+    sta Frame
+    sta GotoNextLevel
+    jsr LoadLevel
+    rts
+.endproc
+
+.proc AdvanceLevel
+    lda InGameplay
+    cmp #TRUE
+    beq :+
+        rts
+    :
+    lda EnemyCount
+    cmp #0
+    beq :+
+        rts
+    :
+    inc Level
+    lda #TRUE
+    sta GotoNextLevel
+    rts
+.endproc

@@ -197,6 +197,7 @@
         jsr Controller_ButtonHandler
         jsr Actor_RunAll
         jsr Actor_CheckCollisions
+        jsr AdvanceLevel
         
 
         WaitForVBlank:
@@ -211,23 +212,10 @@
 
     NMI:
         ; This tripped me up for a while
-        ; We can get our registers clobb
+        ; We can get our registers clobbered
         NMI_CacheRegisters
-        lda Coins
-        cmp #4
-        bne :+
-            lda #0
-            sta Coins
-            sta Frame
-            inc Level
-            jsr LoadLevel
-            NMI_FetchCachedRegisters
-            ; We bail after drawing the tiles because I'm not sure we have enough time
-            ; to also draw the sprites. Probably, but why risk it. Full screen draws only
-            ; happen at level transitions, so why not. That said we don't set the isDrawComplete
-            ; flag because we don't want anything to happen for 1 frame
-            rti
-        :
+        jsr NMI_ChangeLevel
+        NMI_FetchCachedRegisters
 
         ; This is our main draw code
         ; In our game all we draw are sprites, which

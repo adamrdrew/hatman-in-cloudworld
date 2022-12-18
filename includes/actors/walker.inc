@@ -153,9 +153,3 @@
 
     rts
 .endproc
-
-
-.proc Actor_Walker_SpriteCollision
-    jsr Actor_TakeDamageAndMaybeDie
-    rts
-.endproc

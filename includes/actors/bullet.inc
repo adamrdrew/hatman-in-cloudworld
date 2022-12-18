@@ -183,6 +183,8 @@
         lda_CurrentActor Actor::facingRight
         sta_CollidingActor Actor::facingRight
         
+        
+
         SetSpeed:
             lda_CurrentActor Actor::xSpeed
             lda #6
@@ -194,6 +196,7 @@
             sta_CollidingActor Actor::frame
 
         jsr Actor_BulletExplode
+        jsr Actor_TakeDamageAndMaybeDie
 
         rts
 .endproc

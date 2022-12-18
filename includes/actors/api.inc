@@ -94,8 +94,8 @@ TileCollisionYHiBytes:
     ; Handle movement
     jsr Actor_UpdateSpritePositionHorizontal
     jsr Actor_UpdateSpritePositionVertical
-
-    rts
+    Exit:
+        rts
 .endproc
 
 ; This prcedure tests if the current actor will hit a wall
@@ -242,22 +242,17 @@ TileCollisionYHiBytes:
 
 
 .proc Actor_TakeDamageAndMaybeDie
-    lda ActorStates::TAKING_DAMAGE
-    sta_CollidingActor Actor::state
-    lda #0
-    sta_CollidingActor Actor::frame
-    
     lda_CollidingActor Actor::hitpoints
     sec
     sbc #1
     cmp #0
     bne :+
+        dec EnemyCount
         jsr Actor_ExplosionNew
         jsr Actor_DeleteCollidingActor
         rts
     :
     sta_CollidingActor Actor::hitpoints
-    Exit:
     rts
 .endproc
 

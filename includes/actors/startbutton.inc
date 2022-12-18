@@ -1,12 +1,16 @@
 .proc Actor_StartButton_Logic
-        lda BButtonPressed
-        cmp #TRUE
-        bne ExitBButtonHandler
-            ldx #FAMISTUDIO_SFX_CH0
-            jsr famistudio_sfx_play
-            lda #4
-            sta Coins 
-        ExitBButtonHandler:
+    lda #FALSE
+    sta InGameplay
+    lda BButtonPressed
+    cmp #TRUE
+    bne ExitBButtonHandler
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_play
+        inc Level
+        lda #TRUE
+        sta GotoNextLevel
+    ExitBButtonHandler:
+    rts
 .endproc
 
 .proc Actor_StartButton_Draw

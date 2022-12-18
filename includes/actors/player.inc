@@ -10,6 +10,9 @@
     ; Instead we set states and react to the environment
     .proc Actor_Player_Logic
         lda #TRUE
+        sta InGameplay
+
+        lda #TRUE
         sta_CurrentActor Actor::collides
 
         ; We start every step assuming we're idle

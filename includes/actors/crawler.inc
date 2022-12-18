@@ -47,6 +47,7 @@
     lda_CurrentActor Actor::state
     cmp #ActorStates::CREATING
     bne :+
+        inc EnemyCount
         lda #1
         sta_CurrentActor Actor::xSpeed
         lda #ActorStates::IDLE

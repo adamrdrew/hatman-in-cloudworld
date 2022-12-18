@@ -4,7 +4,7 @@ DebugByte: .res 1
 
 Coins: .res 1
 Lives: .res 1
-Level: .res 1
+
 Score: .res 1
 
 ; Used for random number generation
@@ -140,5 +140,29 @@ ActorXPosCache: .res 1
 ; its x location here
 BulletCount: .res 1
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Level Number and Transiion Variables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; This is the level number
+; if we go into some level loading code we'll load this level
+Level: .res 1
+
+; Like everthing in this monster of a game changing levels is way more complicated than you would think it would be
+; At the root of it we move to the next level if GotoNextLevel is true
+; There are a couple of ways GotoNextLevel can be set:
+;   1. If we are in a in gameplay and enemies is 0 then we set GotoNextLevel to true
+;   2. If we are in a menu and the player presses start then we set GotoNextLevel to true
+; The reason we do it in this weirdly indirect way is because the actual level transiions needs to happen
+; in NMI, because thats when we send new nametable data to the PPU. Meaning, our game logic can't trigger a 
+; level change. It has to set GotoNextLevel to signal to NMI to do so
+GotoNextLevel: .res 1
+
+; This is the guard for evaluating enemy count
+; If this is true then we know we are in gameplay
+; If this is false then we know we are in a menu
+InGameplay: .res 1
 ; This is the count of enemies on the screen
+; If InGameplay is true and EnemyCount is 0 then we know the level is complete
 EnemyCount: .res 1
